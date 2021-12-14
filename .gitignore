@@ -79,13 +79,7 @@ DerivedDataCache/*
 #Content/CraftResourcesIcons/*
 
 # HelloFutureAssets
-Content/Assets
-Content/Collections
-Content/Developers
-Content/EF_FirstFloor
-Content/FXVarietyPack
-Content/GH
-Content/Minsu
+
 
 Content/NewAssets/*
 Content/clean_cartoon_gui/*
