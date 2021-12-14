@@ -78,10 +78,10 @@ void AOh_MovingNPC2::IdleState()
 	{
 		m_state2 = ENPCState2::Walk;
 
+
+		randomPos = UNavigationSystemV1::GetRandomReachablePointInRadius(GetWorld(), GetActorLocation(), 700);
+
 		currnetTime = 0;
-
-		randomPos = UNavigationSystemV1::GetRandomReachablePointInRadius(GetWorld(), GetActorLocation(), 1500);
-
 		
 	}
 
