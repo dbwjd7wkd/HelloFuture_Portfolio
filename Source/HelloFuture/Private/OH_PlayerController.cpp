@@ -22,6 +22,9 @@ static ConstructorHelpers::FClassFinder<UUserWidget> oh_QuestUIBPclass(TEXT("/Ga
 		oh_QuestUIclass = oh_QuestUIBPclass.Class;
 	}
 
+	bShowMouseCursor = true;
+	DefaultMouseCursor = EMouseCursor::Default;
+	CurrentMouseCursor = EMouseCursor::Default;
 
 }
 
