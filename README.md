@@ -10,6 +10,5 @@ HelloFuture
 * OS ( Windows )
 * Client ( UE4 4.26.2 version, C++ , Visual Studio)
 * Server ( UE4 Listen Server, Local Server)
-* DB ( MySQL 등 )
 * Design ( Maya, Blender 등 )
 
