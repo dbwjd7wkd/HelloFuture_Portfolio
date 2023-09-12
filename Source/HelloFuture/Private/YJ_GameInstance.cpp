@@ -28,7 +28,7 @@ UYJ_Item* UYJ_GameInstance::GetItemAsEnum(EItemEnum itemEnum)
 	if (!gameInstance) return false;
 
 	int32 idx = (int32)itemEnum;
-	UYJ_Item* item = gameInstance->AllItems[idx];
+	UYJ_Item* item = gameInstance->allItems[idx];
 
     return item;
 }

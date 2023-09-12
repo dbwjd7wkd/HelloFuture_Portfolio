@@ -113,11 +113,11 @@ public:
 
 	// save Game
 	UPROPERTY(BlueprintReadOnly)
-	class UYJ_SaveGame* SaveGameInstance;
+	class UYJ_SaveGame* saveGameInstance;
 	UPROPERTY(BlueprintReadOnly)
 	class UYJ_GameInstance* gameInstance;
 	UPROPERTY(BlueprintReadOnly)
-	class UYJ_SaveGame* LoadGameInstance;
+	class UYJ_SaveGame* loadGameInstance;
 
 	// 퀘스트
 	UPROPERTY(BlueprintAssignable, Category = "Events")
@@ -127,7 +127,7 @@ public:
 
 	// 인벤토리시스템
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Inventory, meta = (AllowPrivateAccess = "true"))
-	class UYJ_InventoryComponent* Inventory;
+	class UYJ_InventoryComponent* inventory;
 
 	UFUNCTION(BlueprintCallable, Category = "Items")
 		void UseItem(class UYJ_Item* Item);

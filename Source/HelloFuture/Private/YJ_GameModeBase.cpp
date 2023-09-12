@@ -23,7 +23,7 @@ bool AYJ_GameModeBase::CheckMyOrder(AHelloFutureCharacter* player)
 
 	if (player)
 	{
-		for (auto item : player->Inventory->Items)
+		for (auto item : player->inventory->items)
 		{
 			// 2. 만약 대기 아이템이 있다면
 			UYJ_WaitingTicketItem* waitingTicketItem = Cast<UYJ_WaitingTicketItem>(item);

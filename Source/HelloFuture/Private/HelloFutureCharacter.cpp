@@ -89,7 +89,7 @@ AHelloFutureCharacter::AHelloFutureCharacter()
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
 	// 인벤토리 시스템
-	Inventory = CreateDefaultSubobject<UYJ_InventoryComponent>(TEXT("Inventory"));
+	inventory = CreateDefaultSubobject<UYJ_InventoryComponent>(TEXT("Inventory"));
 
 	// 채팅 시스템
 	ChatText = CreateDefaultSubobject<UTextRenderComponent>("ChatText");
@@ -165,109 +165,111 @@ void AHelloFutureCharacter::BeginPlay()
 // 정보 저장 및 가져오기
 void AHelloFutureCharacter::SaveGame()
 {
-	SaveGameInstance = Cast<UYJ_SaveGame>(UGameplayStatics::CreateSaveGameObject(UYJ_SaveGame::StaticClass()));
+	saveGameInstance = Cast<UYJ_SaveGame>(UGameplayStatics::CreateSaveGameObject(UYJ_SaveGame::StaticClass()));
 	gameInstance = Cast<UYJ_GameInstance>(GetGameInstance());
-	if (!SaveGameInstance || !Inventory || !gameInstance) return;
+	if (!saveGameInstance || !inventory || !gameInstance) return;
 
 	/** 인벤토리**/
 	// items 정보 저장
-	SaveGameInstance->ItemCnt = Inventory->ItemCnt;
+	saveGameInstance->itemCnt = inventory->itemCnt;
 
-	for (int32 i = 0; i < Inventory->ItemCnt; i++)
+	for (int32 i = 0; i < inventory->itemCnt; i++)
 	{
-		int32 idx = Inventory->Items[i]->ItemIndex;
-		SaveGameInstance->inventoryIdx[idx] = i;
-		SaveGameInstance->inventoryCnt[idx] = Inventory->Items[i]->Count;
+		int32 idx = inventory->items[i]->itemIndex;
+		saveGameInstance->inventoryIdx[idx] = i;
+		saveGameInstance->inventoryCnt[idx] = inventory->items[i]->count;
 	}
 	// 인벤토리 정보들 저장
-	SaveGameInstance->accountBalance = Inventory->accountBalance;
-	SaveGameInstance->cash = Inventory->cash;
+	saveGameInstance->accountBalance = inventory->accountBalance;
+	saveGameInstance->cash = inventory->cash;
 	//SaveGameInstance->columnLength = Inventory->columnLength;
 	//SaveGameInstance->rowLength = Inventory->rowLength;
 	//SaveGameInstance->Capacity = Inventory->Capacity;
 
 	/** 나머지 정보들 **/
 	// 플레이어 이름 저장
-	SaveGameInstance->PlayerName = Name;
-	SaveGameInstance->time = time;
+	saveGameInstance->PlayerName = Name;
+	saveGameInstance->time = time;
 
 	// 구매한 옷
-	SaveGameInstance->BoughtClothes = BoughtClothes;
+	saveGameInstance->BoughtClothes = BoughtClothes;
 
 	//// 구매한 옷 순서대로 in 옷장
-	SaveGameInstance->closetBoughts = closetBoughts;
+	saveGameInstance->closetBoughts = closetBoughts;
 
 	// 은행
-	SaveGameInstance->BankBook = Inventory->BankBook;
-	SaveGameInstance->Loan = Inventory->Loan;
-	SaveGameInstance->Tax = Inventory->Tax;
+	saveGameInstance->BankBook = inventory->BankBook;
+	saveGameInstance->Loan = inventory->Loan;
+	saveGameInstance->Tax = inventory->Tax;
 
 	// 시간
-	SaveGameInstance->worldTime = gameInstance->worldTime;
-	SaveGameInstance->worldTime_Structure = gameInstance->worldTime_Structure;
+	saveGameInstance->worldTime = gameInstance->worldTime;
+	saveGameInstance->worldTime_Structure = gameInstance->worldTime_Structure;
 
-	UGameplayStatics::SaveGameToSlot(SaveGameInstance, SaveGameInstance->SaveSlotName, SaveGameInstance->UserIndex);
+	UGameplayStatics::SaveGameToSlot(saveGameInstance, saveGameInstance->SaveSlotName, saveGameInstance->UserIndex);
 
 	OnSaveGame.Broadcast();
 }
 
 void AHelloFutureCharacter::LoadGame()
 {
-	LoadGameInstance = Cast<UYJ_SaveGame>(UGameplayStatics::CreateSaveGameObject(UYJ_SaveGame::StaticClass()));
-	LoadGameInstance = Cast<UYJ_SaveGame>(UGameplayStatics::LoadGameFromSlot(LoadGameInstance->SaveSlotName, LoadGameInstance->UserIndex));
+	loadGameInstance = Cast<UYJ_SaveGame>(UGameplayStatics::CreateSaveGameObject(UYJ_SaveGame::StaticClass()));
+	loadGameInstance = Cast<UYJ_SaveGame>(UGameplayStatics::LoadGameFromSlot(loadGameInstance->SaveSlotName, loadGameInstance->UserIndex));
 	gameInstance = Cast<UYJ_GameInstance>(GetGameInstance());
 
-	if (!LoadGameInstance || !Inventory || !gameInstance) return;
+	if (!loadGameInstance || !inventory || !gameInstance) return;
 
 	// 아이템 갯수 정보 로드
-	int32 itemCnt = LoadGameInstance->ItemCnt;
-	Inventory->ItemCnt = itemCnt;
-	Inventory->Items.SetNum(itemCnt);
+	int32 itemCnt = loadGameInstance->itemCnt;
+	inventory->itemCnt = itemCnt;
+	inventory->items.SetNum(itemCnt);
 
 	// 모든 아이템을 차례대로 확인해, 각 아이템들의 정보 로드
-	for (int32 i = 0; i < gameInstance->AllItems.Num(); i++)
+	for (int32 i = 0; i < gameInstance->allItems.Num(); i++)
 	{
-		gameInstance->AllItems[i]->ItemIndex = i;
+		gameInstance->allItems[i]->itemIndex = i;
 		// 아이템 갯수가 늘어났을 경우 오류 대비
-		if (LoadGameInstance->inventoryCnt.Num() < i + 1)
+		if (loadGameInstance->inventoryCnt.Num() < i + 1)
 		{
-			LoadGameInstance->inventoryCnt.Add(0);
-			LoadGameInstance->inventoryIdx.Add(-1);
+			loadGameInstance->inventoryCnt.Add(0);
+			loadGameInstance->inventoryIdx.Add(-1);
 		}
 		// 현재 아이템을 가지고 있지 않으면 건너뛰기
-		int32 cnt = LoadGameInstance->inventoryCnt[i];
-		if (cnt <= 0) continue;
+		int32 cnt = loadGameInstance->inventoryCnt[i];
+		if (cnt <= 0) 
+			continue;
 
-		int32 idx = LoadGameInstance->inventoryIdx[i];
+		int32 idx = loadGameInstance->inventoryIdx[i];
 		// 인벤토리에 현재 아이템 객체 넣기
-		Inventory->Items[idx] = gameInstance->AllItems[i];
+		inventory->items[idx] = gameInstance->allItems[i];
 		// 아이템 객체에 정보 넣기
-		Inventory->Items[idx]->Count = cnt;
-		Inventory->Items[idx]->InventoryIndex = idx;
+		inventory->items[idx]->count = cnt;
+		inventory->items[idx]->inventoryIndex = idx;
 	}
+
 	// items 로드
-	Inventory->OnInventoryUpdated.Broadcast();
+	inventory->OnInventoryUpdated.Broadcast();
 
 	// 나머지 인벤토리 정보 로드
-	Inventory->accountBalance = LoadGameInstance->accountBalance;
-	Inventory->cash = LoadGameInstance->cash;
+	inventory->accountBalance = loadGameInstance->accountBalance;
+	inventory->cash = loadGameInstance->cash;
 
 	// 플레이어 이름 로드
-	Name = LoadGameInstance->PlayerName;
-	time = LoadGameInstance->time;
+	Name = loadGameInstance->PlayerName;
+	time = loadGameInstance->time;
 
 	//구매한 옷 로드
-	BoughtClothes = LoadGameInstance->BoughtClothes;
-	closetBoughts = LoadGameInstance->closetBoughts;
+	BoughtClothes = loadGameInstance->BoughtClothes;
+	closetBoughts = loadGameInstance->closetBoughts;
 
 	// 은행
-	Inventory->BankBook = LoadGameInstance->BankBook;
-	Inventory->Loan = LoadGameInstance->Loan;
-	Inventory->Tax = LoadGameInstance->Tax;
+	inventory->BankBook = loadGameInstance->BankBook;
+	inventory->Loan = loadGameInstance->Loan;
+	inventory->Tax = loadGameInstance->Tax;
 
 	// 시간
-	gameInstance->worldTime = LoadGameInstance->worldTime;
-	gameInstance->worldTime_Structure = LoadGameInstance->worldTime_Structure;
+	gameInstance->worldTime = loadGameInstance->worldTime;
+	gameInstance->worldTime_Structure = loadGameInstance->worldTime_Structure;
 
 	OnLoadGame.Broadcast();
 

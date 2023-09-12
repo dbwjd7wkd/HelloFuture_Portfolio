@@ -189,10 +189,10 @@ public:
 
 	// 인벤토리 아이템
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Items")
-	TArray<class UYJ_Item*> Items;
+	TArray<class UYJ_Item*> items;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Items")
-	int32 ItemCnt;
+	int32 itemCnt;
 
 	// 통장이자
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "BankBook")

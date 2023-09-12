@@ -105,7 +105,7 @@ public:
         TArray<int32> inventoryCnt; // 인벤토리의 각 아이템 갯수
 
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Inventory")
-        int32 ItemCnt;
+        int32 itemCnt;
 
     // 삭제 예정
     //UPROPERTY(VisibleAnywhere, Category = "Inventory")

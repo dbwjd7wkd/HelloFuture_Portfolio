@@ -27,7 +27,7 @@ public:
 public:
 	// 플레이 시 모든 아이템들 객체 들어가있음
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Instanced)
-		TArray<class UYJ_Item*> AllItems;
+		TArray<class UYJ_Item*> allItems;
 
 	// custoM에서 구매한 옷을 배치할 위치 백터 어레이 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ClosetSpawnLocation")
