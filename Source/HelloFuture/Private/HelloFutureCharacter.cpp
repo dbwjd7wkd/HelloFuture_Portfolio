@@ -158,9 +158,214 @@ void AHelloFutureCharacter::BeginPlay()
 
 	// 닉네임 셋팅
 	//name_TextRender->SetText(FText::FromString("Something"));
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// 정보 저장 및 가져오기
+void AHelloFutureCharacter::SaveGame()
+{
+	SaveGameInstance = Cast<UYJ_SaveGame>(UGameplayStatics::CreateSaveGameObject(UYJ_SaveGame::StaticClass()));
+	gameInstance = Cast<UYJ_GameInstance>(GetGameInstance());
+	if (!SaveGameInstance || !Inventory || !gameInstance) return;
+
+	/** 인벤토리**/
+	// items 정보 저장
+	SaveGameInstance->ItemCnt = Inventory->ItemCnt;
+
+	for (int32 i = 0; i < Inventory->ItemCnt; i++)
+	{
+		//SaveGameInstance->Items.Add(Inventory->Items[i]);
+		int32 idx = Inventory->Items[i]->ItemIndex;
+		SaveGameInstance->inventoryIdx[idx] = i;
+		SaveGameInstance->inventoryCnt[idx] = Inventory->Items[i]->Count;
+	}
+	// 인벤토리 정보들 저장
+	SaveGameInstance->accountBalance = Inventory->accountBalance;
+	SaveGameInstance->cash = Inventory->cash;
+	//SaveGameInstance->columnLength = Inventory->columnLength;
+	//SaveGameInstance->rowLength = Inventory->rowLength;
+	//SaveGameInstance->Capacity = Inventory->Capacity;
+
+	/** 나머지 정보들 **/
+	// 플레이어 이름 저장
+	SaveGameInstance->PlayerName = Name;
+	SaveGameInstance->time = time;
+
+	// 구매한 옷
+	SaveGameInstance->BoughtClothes = BoughtClothes;
+
+	//// 구매한 옷 순서대로 in 옷장
+	SaveGameInstance->closetBoughts = closetBoughts;
+
+	// 은행
+	SaveGameInstance->BankBook = Inventory->BankBook;
+	SaveGameInstance->Loan = Inventory->Loan;
+	SaveGameInstance->Tax = Inventory->Tax;
+
+	// 시간
+	SaveGameInstance->worldTime = gameInstance->worldTime;
+	SaveGameInstance->worldTime_Structure = gameInstance->worldTime_Structure;
+
+	UGameplayStatics::SaveGameToSlot(SaveGameInstance, SaveGameInstance->SaveSlotName, SaveGameInstance->UserIndex);
+
+	OnSaveGame.Broadcast();
+}
+
+void AHelloFutureCharacter::LoadGame()
+{
+	LoadGameInstance = Cast<UYJ_SaveGame>(UGameplayStatics::CreateSaveGameObject(UYJ_SaveGame::StaticClass()));
+	LoadGameInstance = Cast<UYJ_SaveGame>(UGameplayStatics::LoadGameFromSlot(LoadGameInstance->SaveSlotName, LoadGameInstance->UserIndex));
+	gameInstance = Cast<UYJ_GameInstance>(GetGameInstance());
+
+	if (!LoadGameInstance || !Inventory || !gameInstance) return;
+
+	//items 정보 로드
+	Inventory->ItemCnt = LoadGameInstance->ItemCnt;
+	Inventory->Items.SetNum(Inventory->ItemCnt);
+
+	for (int32 i = 0; i < gameInstance->AllItems.Num(); i++)
+	{
+		// 갯수가 1 이상일 때만 인벤토리에 가지고 있었음
+		gameInstance->AllItems[i]->ItemIndex = i;
+		if (LoadGameInstance->inventoryCnt.Num() < i + 1)
+		{
+			// 아이템 갯수가 늘어났을 경우 오류 대비
+			LoadGameInstance->inventoryCnt.Add(0);
+			LoadGameInstance->inventoryIdx.Add(-1);
+		}
+		int32 cnt = LoadGameInstance->inventoryCnt[i];
+		if (cnt <= 0) continue;
+
+		int32 idx = LoadGameInstance->inventoryIdx[i];
+		// 가지고 있던 아이템들에 맞는 아이템 객체들 넣기
+		Inventory->Items[idx] = gameInstance->AllItems[i];
+		// 가지고 있던 아이템들의 맞는 갯수 정보 넣기
+		Inventory->Items[idx]->Count = cnt;
+		Inventory->Items[idx]->InventoryIndex = idx;
+	}
+	// items 로드
+	//Inventory->Items = LoadGameInstance->Items;
+	Inventory->OnInventoryUpdated.Broadcast();
+
+	// 인벤토리 정보들 로드
+	Inventory->accountBalance = LoadGameInstance->accountBalance;
+	Inventory->cash = LoadGameInstance->cash;
+	//Inventory->columnLength = LoadGameInstance->columnLength;
+	//Inventory->rowLength = LoadGameInstance->rowLength;
+	//Inventory->Capacity = LoadGameInstance->Capacity;
+
+	// 플레이어 이름 로드
+	Name = LoadGameInstance->PlayerName;
+	time = LoadGameInstance->time;
+
+	//구매한 옷 로드
+	BoughtClothes = LoadGameInstance->BoughtClothes;
+	closetBoughts = LoadGameInstance->closetBoughts;
+
+	// 은행
+	Inventory->BankBook = LoadGameInstance->BankBook;
+	Inventory->Loan = LoadGameInstance->Loan;
+	Inventory->Tax = LoadGameInstance->Tax;
+
+	// 시간
+	gameInstance->worldTime = LoadGameInstance->worldTime;
+	gameInstance->worldTime_Structure = LoadGameInstance->worldTime_Structure;
+
+	OnLoadGame.Broadcast();
 
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// 커스텀_서버
+void AHelloFutureCharacter::GetCustom_OnServer_Implementation(const FString& OldName)
+{
+	BP_GetCustom(OldName);
+	GetCustom_OnClient(OldName);
+}
+
+bool AHelloFutureCharacter::GetCustom_OnServer_Validate(const FString& OldName)
+{
+	return true;
+}
+
+void AHelloFutureCharacter::GetCustom_OnClient_Implementation(const FString& OldName)
+{
+	BP_GetCustom(OldName);
+}
+
+bool AHelloFutureCharacter::GetCustom_OnClient_Validate(const FString& OldName)
+{
+	return true;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// 닉네임_서버
+void AHelloFutureCharacter::AttemptToSendName(const FString& Message, const FString& OldName)
+{
+	// 만약 서버가 없다면 ServerSendName를 보내고
+	// 아니라면, SendName를 이용
+	if (GetLocalRole() < ROLE_Authority)
+	{
+		// 클라이언트일 때
+		ServerSendName(Message);
+		GetCustom_OnServer(OldName);
+	}
+	else
+	{
+		// 서버일 때
+		SendName(Message);
+		BP_GetCustom(OldName);
+	}
+}
+
+void AHelloFutureCharacter::SendName(const FString& Message)
+{
+	CurrentName = Message;
+	UpdateNameText();
+	//c->CallFunctionByNameWithArguments(TEXT("Get Custom on Server"), ar, NULL, true);
+}
+
+void AHelloFutureCharacter::ServerSendName_Implementation(const FString& Message)
+{
+	SendName(Message);
+	ClientSendName(Message);
+}
+
+bool AHelloFutureCharacter::ServerSendName_Validate(const FString& Message)
+{
+	if (Message.Len() < 255)
+	{
+		return true;
+	}
+	else return false;
+}
+
+void AHelloFutureCharacter::ClientSendName_Implementation(const FString& Message)
+{
+	SendName(Message);
+}
+
+bool AHelloFutureCharacter::ClientSendName_Validate(const FString& Message)
+{
+	if (Message.Len() < 255)
+	{
+		return true;
+	}
+	else return false;
+}
+
+void AHelloFutureCharacter::OnRep_CurrentName()
+{
+	UpdateNameText();
+}
+
+void AHelloFutureCharacter::UpdateNameText()
+{
+	C_TextRenderName->SetText(CurrentName);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+// 채팅
 void AHelloFutureCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -225,7 +430,8 @@ void AHelloFutureCharacter::UpdateChatText()
 	ChatText->SetText(FText::FromString(CurrentMessage));
 }
 
-
+////////////////////////////////////////////////////////////////////////////////////////////
+// 나무 흔들기
 void AHelloFutureCharacter::KeyShakeTree()
 {
 	FHitResult HitResult;
@@ -257,7 +463,7 @@ void AHelloFutureCharacter::ShakeTree_Implementation()
 	UE_LOG(LogTemp, Warning, TEXT("ShakeTree_Activate"));
 }
 
-/////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
 // 옷 구매 확인
 bool AHelloFutureCharacter::GetBoughtClothes(FString key)
 {
@@ -277,6 +483,7 @@ void AHelloFutureCharacter::SetBoughtClothes(FString key, bool value)
 	BoughtClothes.Add(key, value);
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
 // 액자 이미지 FilePicker
 void AHelloFutureCharacter::OpenFileDialog(int32 frameNumber, const FString& DialogTitle, const FString& DefaultPath, const FString& FileTypes, TArray<FString>& OutFileNames)
 {
@@ -295,7 +502,6 @@ void AHelloFutureCharacter::OpenFileDialog(int32 frameNumber, const FString& Dia
 		}
 	}
 }
-
 
 UTexture2D* AHelloFutureCharacter::GetFile(const FString& File, bool& IsValid, int32& Width, int32& Height)
 {
@@ -353,7 +559,6 @@ UTexture2D* AHelloFutureCharacter::GetFile(const FString& File, bool& IsValid, i
 	return Texture;
 }
 
-
 //void AHelloFutureCharacter::PrintData(const FString& File)
 //{
 //	//Parse the data into a string array
@@ -368,7 +573,6 @@ UTexture2D* AHelloFutureCharacter::GetFile(const FString& File, bool& IsValid, i
 
 //////////////////////////////////////////////////////////////////////////
 // Input
-
 void AHelloFutureCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
 {
 	// Set up gameplay key bindings
@@ -400,20 +604,6 @@ void AHelloFutureCharacter::SetupPlayerInputComponent(class UInputComponent* Pla
 	// save game
 	PlayerInputComponent->BindAction("Save", IE_Pressed, this, &AHelloFutureCharacter::SaveGame);
 	PlayerInputComponent->BindAction("Load", IE_Pressed, this, &AHelloFutureCharacter::LoadGame);
-
-
-	//////////// 농장 꾸미기 ///////////////
-	
-// 	농작물 활성화 O키
-// 	PlayerInputComponent->BindAction("PlantActivate", IE_Pressed, this, &AHelloFutureCharacter::KeyActivate);
-// 	
-// 	// 농작물 씨앗뿌리기 P키
-// 	PlayerInputComponent->BindAction("PlantSeed", IE_Pressed, this, &AHelloFutureCharacter::KeySeed);
-// 
-// 	// 씨앗개수 조절
-// 	PlayerInputComponent->BindAction("SeedUp", IE_Pressed, this, &AHelloFutureCharacter::UpSeed);
-// 	PlayerInputComponent->BindAction("SeedDown", IE_Pressed, this, &AHelloFutureCharacter::DownSeed);
-
 }
 
 // 인벤토리 시스템
@@ -425,7 +615,6 @@ void AHelloFutureCharacter::UseItem(class UYJ_Item* Item)
 		Item->OnUse(this); // bp event
 	}
 }
-
 
 void AHelloFutureCharacter::CreatePlayerHUD(FText playerName)
 {
@@ -441,137 +630,6 @@ void AHelloFutureCharacter::CreatePlayerHUD(FText playerName)
 
 void AHelloFutureCharacter::InitializeGame()
 {
-
-}
-
-void AHelloFutureCharacter::SaveGame()
-{
-	SaveGameInstance = Cast<UYJ_SaveGame>(UGameplayStatics::CreateSaveGameObject(UYJ_SaveGame::StaticClass()));
-	gameInstance = Cast<UYJ_GameInstance>(GetGameInstance());
-	if (!SaveGameInstance || !Inventory || !gameInstance) return;
-
-	/** 인벤토리**/
-	// items 정보 저장
-	SaveGameInstance->ItemCnt = Inventory->ItemCnt;
-
-	for (int32 i=0; i<Inventory->ItemCnt; i++)
-	{
-		//SaveGameInstance->Items.Add(Inventory->Items[i]);
-		int32 idx = Inventory->Items[i]->ItemIndex;
-		SaveGameInstance->inventoryIdx[idx] = i;
-		SaveGameInstance->inventoryCnt[idx] = Inventory->Items[i]->Count;
-	}
-	// 인벤토리 정보들 저장
-	SaveGameInstance->accountBalance = Inventory->accountBalance;
-	SaveGameInstance->cash = Inventory->cash;
-	//SaveGameInstance->columnLength = Inventory->columnLength;
-	//SaveGameInstance->rowLength = Inventory->rowLength;
-	//SaveGameInstance->Capacity = Inventory->Capacity;
-
-	/** 나머지 정보들 **/
-	// 플레이어 이름 저장
-	SaveGameInstance->PlayerName = Name;
-	SaveGameInstance->time = time;
-
-	// 구매한 옷
-	SaveGameInstance->BoughtClothes = BoughtClothes;
-
-	// 이전 맵의 이름 저장
-	//SaveGameInstance->preLevelName = preLevelName;
-
-	//// 구매한 옷 순서대로 in 옷장
-	//SaveGameInstance->closetBoughtMesh = closetBoughtMesh;
-	//SaveGameInstance->closetBoughtMaterialStruct/ = closetBoughtMaterialStruct;
-	SaveGameInstance->closetBoughts = closetBoughts;
-
-	// 은행
-	SaveGameInstance->BankBook = Inventory->BankBook;
-	SaveGameInstance->Loan = Inventory->Loan;
-	SaveGameInstance->Tax = Inventory->Tax;
-
-	// 시간
-	SaveGameInstance->worldTime = gameInstance->worldTime;
-	SaveGameInstance->worldTime_Structure = gameInstance->worldTime_Structure;
-
-	UGameplayStatics::SaveGameToSlot(SaveGameInstance, SaveGameInstance->SaveSlotName, SaveGameInstance->UserIndex);
-
-	OnSaveGame.Broadcast();
-}
-
-void AHelloFutureCharacter::LoadGame()
-{
-	LoadGameInstance = Cast<UYJ_SaveGame>(UGameplayStatics::CreateSaveGameObject(UYJ_SaveGame::StaticClass()));
-	LoadGameInstance = Cast<UYJ_SaveGame>(UGameplayStatics::LoadGameFromSlot(LoadGameInstance->SaveSlotName, LoadGameInstance->UserIndex));
-	gameInstance = Cast<UYJ_GameInstance>(GetGameInstance());
-
-	if (!LoadGameInstance || !Inventory || !gameInstance) return;
-
-	//items 정보 로드
-	Inventory->ItemCnt = LoadGameInstance->ItemCnt;
-	Inventory->Items.SetNum(Inventory->ItemCnt);
-
-	for (int32 i = 0; i < gameInstance->AllItems.Num(); i++)
-	{
-		// 갯수가 1 이상일 때만 인벤토리에 가지고 있었음
-		gameInstance->AllItems[i]->ItemIndex = i;
-		if (LoadGameInstance->inventoryCnt.Num() < i + 1)
-		{
-			// 아이템 갯수가 늘어났을 경우 오류 대비
-			LoadGameInstance->inventoryCnt.Add(0); 
-			LoadGameInstance->inventoryIdx.Add(-1);
-		}
-		int32 cnt = LoadGameInstance->inventoryCnt[i];
-		if (cnt <= 0) continue;
-
-		int32 idx = LoadGameInstance->inventoryIdx[i];
-		// 가지고 있던 아이템들에 맞는 아이템 객체들 넣기
-		Inventory->Items[idx] = gameInstance->AllItems[i];
-		// 가지고 있던 아이템들의 맞는 갯수 정보 넣기
-		Inventory->Items[idx]->Count = cnt;
-		Inventory->Items[idx]->InventoryIndex = idx;
-	}
-	// items 로드
-	//Inventory->Items = LoadGameInstance->Items;
-	Inventory->OnInventoryUpdated.Broadcast();
-	
-	// 인벤토리 정보들 로드
-	Inventory->accountBalance = LoadGameInstance->accountBalance;
-	Inventory->cash = LoadGameInstance->cash;
-	//Inventory->columnLength = LoadGameInstance->columnLength;
-	//Inventory->rowLength = LoadGameInstance->rowLength;
-	//Inventory->Capacity = LoadGameInstance->Capacity;
-
-	// 플레이어 이름 로드
-	Name = LoadGameInstance->PlayerName;
-	time = LoadGameInstance->time;
-
-	//if (GEngine)
-	//{
-	//	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("로드 성공"));
-	//}
-
-	//구매한 옷 로드
-	BoughtClothes = LoadGameInstance->BoughtClothes;
-
-	// 이전 맵의 이름 로드
-	//preLevelName = LoadGameInstance->preLevelName;
-
-	// 구매한 옷 순서대로 in 옷장
-	//closetBoughtMesh = LoadGameInstance->closetBoughtMesh;
-	//closetBoughtMaterialStruct = LoadGameInstance->closetBoughtMaterialStruct;
-
-	closetBoughts = LoadGameInstance->closetBoughts;
-
-	// 은행
-	Inventory->BankBook = LoadGameInstance->BankBook;
-	Inventory->Loan = LoadGameInstance->Loan;
-	Inventory->Tax = LoadGameInstance->Tax;
-
-	// 시간
-	gameInstance->worldTime = LoadGameInstance->worldTime;
-	gameInstance->worldTime_Structure = LoadGameInstance->worldTime_Structure;
-
-	OnLoadGame.Broadcast();
 
 }
 
@@ -655,96 +713,7 @@ void AHelloFutureCharacter::ClearInteractiveInRange(class AOH_InteractiveBase* I
 	
 }
 
-
-///////////////////// 커스텀_서버
-void AHelloFutureCharacter::GetCustom_OnServer_Implementation(const FString& OldName)
-{
-	BP_GetCustom(OldName);
-	GetCustom_OnClient(OldName);
-}
-
-bool AHelloFutureCharacter::GetCustom_OnServer_Validate(const FString& OldName)
-{
-	return true;
-}
-
-void AHelloFutureCharacter::GetCustom_OnClient_Implementation(const FString& OldName)
-{
-	BP_GetCustom(OldName);
-}
-
-bool AHelloFutureCharacter::GetCustom_OnClient_Validate(const FString& OldName)
-{
-	return true;
-}
-
-///////////////////// 닉네임_서버
-void AHelloFutureCharacter::AttemptToSendName(const FString& Message, const FString& OldName)
-{
-	// 만약 서버가 없다면 ServerSendName를 보내고
-	// 아니라면, SendName를 이용
-	if (GetLocalRole() < ROLE_Authority)
-	{
-		// 클라이언트일 때
-		ServerSendName(Message);
-		GetCustom_OnServer(OldName);
-	}
-	else
-	{
-		// 서버일 때
-		SendName(Message);
-		BP_GetCustom(OldName);
-	}
-}
-
-void AHelloFutureCharacter::SendName(const FString& Message)
-{
-	CurrentName = Message;
-	UpdateNameText();
-	//c->CallFunctionByNameWithArguments(TEXT("Get Custom on Server"), ar, NULL, true);
-}
-
-void AHelloFutureCharacter::ServerSendName_Implementation(const FString& Message)
-{
-	SendName(Message);
-	ClientSendName(Message);
-}
-
-bool AHelloFutureCharacter::ServerSendName_Validate(const FString& Message)
-{
-		if (Message.Len() < 255)
-	{
-		return true;
-	}
-	else return false;
-}
-
-void AHelloFutureCharacter::ClientSendName_Implementation(const FString& Message)
-{
-	SendName(Message);
-}
-
-bool AHelloFutureCharacter::ClientSendName_Validate(const FString& Message)
-{
-	if (Message.Len() < 255)
-	{
-		return true;
-	}
-	else return false;
-}
-
-void AHelloFutureCharacter::OnRep_CurrentName()
-{
-	UpdateNameText();
-}
-
-void AHelloFutureCharacter::UpdateNameText()
-{
-	C_TextRenderName->SetText(CurrentName);
-}
 ////////////////////////////////////////////////
-
-
 void AHelloFutureCharacter::Chatting()
 {
 // 	if (ChatWidgetClass)
