@@ -46,6 +46,7 @@
 
 //////////////////////////////////////////////////////////////////////////
 // AHelloFutureCharacter
+// 기능: saveGame/LoadGame, 커스텀_서버, 닉네임_서버, 채팅, 나무흔들기, 옷구매, 액자이미지 파일 가져오기, input
 
 struct FUpdateTextureData
 {
@@ -275,6 +276,7 @@ void AHelloFutureCharacter::LoadGame()
 
 }
 
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // 커스텀_서버
 void AHelloFutureCharacter::GetCustom_OnServer_Implementation(const FString& OldName)
@@ -364,6 +366,7 @@ void AHelloFutureCharacter::UpdateNameText()
 	C_TextRenderName->SetText(CurrentName);
 }
 
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // 채팅
 void AHelloFutureCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -430,6 +433,7 @@ void AHelloFutureCharacter::UpdateChatText()
 	ChatText->SetText(FText::FromString(CurrentMessage));
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////////////////
 // 나무 흔들기
 void AHelloFutureCharacter::KeyShakeTree()
@@ -463,6 +467,7 @@ void AHelloFutureCharacter::ShakeTree_Implementation()
 	UE_LOG(LogTemp, Warning, TEXT("ShakeTree_Activate"));
 }
 
+
 //////////////////////////////////////////////////////////////////////////////////
 // 옷 구매 확인
 bool AHelloFutureCharacter::GetBoughtClothes(FString key)
@@ -482,6 +487,7 @@ void AHelloFutureCharacter::SetBoughtClothes(FString key, bool value)
 	// 자동으로 오버로딩됨
 	BoughtClothes.Add(key, value);
 }
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 // 액자 이미지 FilePicker
@@ -571,6 +577,7 @@ UTexture2D* AHelloFutureCharacter::GetFile(const FString& File, bool& IsValid, i
 //	}
 //}
 
+
 //////////////////////////////////////////////////////////////////////////
 // Input
 void AHelloFutureCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
@@ -606,16 +613,6 @@ void AHelloFutureCharacter::SetupPlayerInputComponent(class UInputComponent* Pla
 	PlayerInputComponent->BindAction("Load", IE_Pressed, this, &AHelloFutureCharacter::LoadGame);
 }
 
-// 인벤토리 시스템
-void AHelloFutureCharacter::UseItem(class UYJ_Item* Item)
-{
-	if (Item)
-	{
-		Item->Use(this);
-		Item->OnUse(this); // bp event
-	}
-}
-
 void AHelloFutureCharacter::CreatePlayerHUD(FText playerName)
 {
 	if (nameWidgetClass)
@@ -626,11 +623,6 @@ void AHelloFutureCharacter::CreatePlayerHUD(FText playerName)
 			nameWidget->AddToViewport();
 		}
 	}
-}
-
-void AHelloFutureCharacter::InitializeGame()
-{
-
 }
 
 void AHelloFutureCharacter::OnResetVR()
@@ -714,6 +706,20 @@ void AHelloFutureCharacter::ClearInteractiveInRange(class AOH_InteractiveBase* I
 }
 
 ////////////////////////////////////////////////
+void AHelloFutureCharacter::InitializeGame()
+{
+
+}
+
+void AHelloFutureCharacter::UseItem(class UYJ_Item* Item)
+{
+	if (Item)
+	{
+		Item->Use(this);
+		Item->OnUse(this); // bp event
+	}
+}
+
 void AHelloFutureCharacter::Chatting()
 {
 // 	if (ChatWidgetClass)
