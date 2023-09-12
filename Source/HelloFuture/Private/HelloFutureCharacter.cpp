@@ -175,7 +175,6 @@ void AHelloFutureCharacter::SaveGame()
 
 	for (int32 i = 0; i < Inventory->ItemCnt; i++)
 	{
-		//SaveGameInstance->Items.Add(Inventory->Items[i]);
 		int32 idx = Inventory->Items[i]->ItemIndex;
 		SaveGameInstance->inventoryIdx[idx] = i;
 		SaveGameInstance->inventoryCnt[idx] = Inventory->Items[i]->Count;
@@ -220,40 +219,38 @@ void AHelloFutureCharacter::LoadGame()
 
 	if (!LoadGameInstance || !Inventory || !gameInstance) return;
 
-	//items 정보 로드
-	Inventory->ItemCnt = LoadGameInstance->ItemCnt;
-	Inventory->Items.SetNum(Inventory->ItemCnt);
+	// 아이템 갯수 정보 로드
+	int32 itemCnt = LoadGameInstance->ItemCnt;
+	Inventory->ItemCnt = itemCnt;
+	Inventory->Items.SetNum(itemCnt);
 
+	// 모든 아이템을 차례대로 확인해, 각 아이템들의 정보 로드
 	for (int32 i = 0; i < gameInstance->AllItems.Num(); i++)
 	{
-		// 갯수가 1 이상일 때만 인벤토리에 가지고 있었음
 		gameInstance->AllItems[i]->ItemIndex = i;
+		// 아이템 갯수가 늘어났을 경우 오류 대비
 		if (LoadGameInstance->inventoryCnt.Num() < i + 1)
 		{
-			// 아이템 갯수가 늘어났을 경우 오류 대비
 			LoadGameInstance->inventoryCnt.Add(0);
 			LoadGameInstance->inventoryIdx.Add(-1);
 		}
+		// 현재 아이템을 가지고 있지 않으면 건너뛰기
 		int32 cnt = LoadGameInstance->inventoryCnt[i];
 		if (cnt <= 0) continue;
 
 		int32 idx = LoadGameInstance->inventoryIdx[i];
-		// 가지고 있던 아이템들에 맞는 아이템 객체들 넣기
+		// 인벤토리에 현재 아이템 객체 넣기
 		Inventory->Items[idx] = gameInstance->AllItems[i];
-		// 가지고 있던 아이템들의 맞는 갯수 정보 넣기
+		// 아이템 객체에 정보 넣기
 		Inventory->Items[idx]->Count = cnt;
 		Inventory->Items[idx]->InventoryIndex = idx;
 	}
 	// items 로드
-	//Inventory->Items = LoadGameInstance->Items;
 	Inventory->OnInventoryUpdated.Broadcast();
 
-	// 인벤토리 정보들 로드
+	// 나머지 인벤토리 정보 로드
 	Inventory->accountBalance = LoadGameInstance->accountBalance;
 	Inventory->cash = LoadGameInstance->cash;
-	//Inventory->columnLength = LoadGameInstance->columnLength;
-	//Inventory->rowLength = LoadGameInstance->rowLength;
-	//Inventory->Capacity = LoadGameInstance->Capacity;
 
 	// 플레이어 이름 로드
 	Name = LoadGameInstance->PlayerName;
