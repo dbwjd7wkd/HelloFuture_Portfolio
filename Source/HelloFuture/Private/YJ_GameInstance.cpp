@@ -8,22 +8,6 @@
 
 UYJ_GameInstance::UYJ_GameInstance()
 {
-    //UE_LOG(LogTemp, Warning, TEXT("%s"), TEXT("Good"));
-    
-	// cornseed 아이템 만들기
-    //item_CornSeed = NewObject<UYJ_Item>(this, UYJ_Item::StaticClass(), FName("CornSeed"));
-    //if (item_CornSeed != nullptr)
-    //{
-    //    ConstructorHelpers::FObjectFinder<UTexture2D> CornSeed_Image(TEXT("Texture2D'/Game/YJ/Blueprints/Inventory/InventoryImage/CornSeed.CornSeed'"));
-    //    if (CornSeed_Image.Succeeded())
-    //    {
-    //        item_CornSeed->Thumbnail = CornSeed_Image.Object;
-    //    }
-    //    item_CornSeed->ItemDisplayName = FText::FromString(TEXT("CornSeed"));
-    //    item_CornSeed->ItemDescription = FText::FromString(TEXT("CornSeed"));
-    //    item_CornSeed->Price = 300;
-    //    AllItems.Add(item_CornSeed);
-    //}
     int length = 13;
     for (int i=0; i < length; i++)
     {
@@ -35,6 +19,7 @@ UYJ_GameInstance::UYJ_GameInstance()
     
 }
 
+// 아이템 배열에서 선택해서 가져오기
 UYJ_Item* UYJ_GameInstance::GetItemAsEnum(EItemEnum itemEnum)
 {
 	UWorld* world = GetWorld();
@@ -48,6 +33,7 @@ UYJ_Item* UYJ_GameInstance::GetItemAsEnum(EItemEnum itemEnum)
     return item;
 }
 
+// 현재 플레이어 컴퓨터 주소 가져오기
 FString UYJ_GameInstance::GetMyIpAddress()
 {
     FString IpAddr("NONE");
