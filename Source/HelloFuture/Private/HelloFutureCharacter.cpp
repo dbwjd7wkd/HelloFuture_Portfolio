@@ -171,17 +171,17 @@ void AHelloFutureCharacter::SaveGame()
 
 	/** 인벤토리**/
 	// items 정보 저장
-	saveGameInstance->itemCnt = inventory->itemCnt;
+	saveGameInstance->itemCnt = inventory->ItemCnt;
 
-	for (int32 i = 0; i < inventory->itemCnt; i++)
+	for (int32 i = 0; i < inventory->ItemCnt; i++)
 	{
-		int32 idx = inventory->items[i]->itemIndex;
+		int32 idx = inventory->Items[i]->itemIndex;
 		saveGameInstance->inventoryIdx[idx] = i;
-		saveGameInstance->inventoryCnt[idx] = inventory->items[i]->count;
+		saveGameInstance->inventoryCnt[idx] = inventory->Items[i]->count;
 	}
 	// 인벤토리 정보들 저장
-	saveGameInstance->accountBalance = inventory->accountBalance;
-	saveGameInstance->cash = inventory->cash;
+	saveGameInstance->accountBalance = inventory->AccountBalance;
+	saveGameInstance->cash = inventory->Cash;
 	//SaveGameInstance->columnLength = Inventory->columnLength;
 	//SaveGameInstance->rowLength = Inventory->rowLength;
 	//SaveGameInstance->Capacity = Inventory->Capacity;
@@ -221,8 +221,8 @@ void AHelloFutureCharacter::LoadGame()
 
 	// 아이템 갯수 정보 로드
 	int32 itemCnt = loadGameInstance->itemCnt;
-	inventory->itemCnt = itemCnt;
-	inventory->items.SetNum(itemCnt);
+	inventory->ItemCnt = itemCnt;
+	inventory->Items.SetNum(itemCnt);
 
 	// 모든 아이템을 차례대로 확인해, 각 아이템들의 정보 로드
 	for (int32 i = 0; i < gameInstance->allItems.Num(); i++)
@@ -241,18 +241,18 @@ void AHelloFutureCharacter::LoadGame()
 
 		int32 idx = loadGameInstance->inventoryIdx[i];
 		// 인벤토리에 현재 아이템 객체 넣기
-		inventory->items[idx] = gameInstance->allItems[i];
+		inventory->Items[idx] = gameInstance->allItems[i];
 		// 아이템 객체에 정보 넣기
-		inventory->items[idx]->count = cnt;
-		inventory->items[idx]->inventoryIndex = idx;
+		inventory->Items[idx]->count = cnt;
+		inventory->Items[idx]->inventoryIndex = idx;
 	}
 
 	// items 로드
 	inventory->OnInventoryUpdated.Broadcast();
 
 	// 나머지 인벤토리 정보 로드
-	inventory->accountBalance = loadGameInstance->accountBalance;
-	inventory->cash = loadGameInstance->cash;
+	inventory->AccountBalance = loadGameInstance->accountBalance;
+	inventory->Cash = loadGameInstance->cash;
 
 	// 플레이어 이름 로드
 	Name = loadGameInstance->PlayerName;

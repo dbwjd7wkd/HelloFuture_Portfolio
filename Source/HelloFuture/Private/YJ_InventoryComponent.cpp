@@ -12,33 +12,24 @@
 // Sets default values for this component's properties
 UYJ_InventoryComponent::UYJ_InventoryComponent()
 {
+	AccountBalance = 0;
+	Cash = 10000;
 
-	accountBalance = 0;
-	cash = 10000;
-
-	columnLength = 7;
-	rowLength = 3;
-	Capacity = columnLength * rowLength; // 20
-
-	//Items.SetNum(Capacity);
+	ColumnLength = 7;
+	RowLength = 3;
+	Capacity = ColumnLength * RowLength; // 20
 }
 
 // Called when the game starts
 void UYJ_InventoryComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
-	//for (auto& Item : DefaultItems)
-	//{
-	//	AddItem(Item);
-	//}
-
 }
 
 bool UYJ_InventoryComponent::AddItem(UYJ_Item* Item)
 {
 	// 인벤토리 창이 다 차거나 들어오는 Item 이 유효하지 않으면 아래 내용 실행하지 않음.
-	if (items.Num() >= Capacity || !Item)
+	if (Items.Num() >= Capacity || !Item)
 	{
 		return false;
 	}
@@ -47,7 +38,7 @@ bool UYJ_InventoryComponent::AddItem(UYJ_Item* Item)
 	UYJ_WaitingTicketItem* waitingTicketItem = Cast<UYJ_WaitingTicketItem>(Item);
 	if (waitingTicketItem)
 	{
-		for (auto yjItem : items)
+		for (auto yjItem : Items)
 		{
 			if (Cast<UYJ_WaitingTicketItem>(yjItem) != nullptr)
 			{
@@ -65,8 +56,8 @@ bool UYJ_InventoryComponent::AddItem(UYJ_Item* Item)
 
 	Item->OwningInventory = this;
 	Item->World = GetWorld();
-	state = "add";
-	items.Add(Item);
+	State = "add";
+	Items.Add(Item);
 	// Update UI
 	OnInventoryUpdated.Broadcast();
 
@@ -77,7 +68,7 @@ bool UYJ_InventoryComponent::AddItem(UYJ_Item* Item)
 bool UYJ_InventoryComponent::AddItem2(EItemEnum Item)
 {
 	// 인벤토리 창이 다 차면 아래 내용 실행하지 않음.
-	if (itemCnt >= Capacity)
+	if (ItemCnt >= Capacity)
 	{
 		return false;
 	}
@@ -96,7 +87,7 @@ bool UYJ_InventoryComponent::AddItem2(EItemEnum Item)
 	UYJ_WaitingTicketItem* waitingTicketItem = Cast<UYJ_WaitingTicketItem>(item);
 	if (waitingTicketItem)
 	{
-		for (auto yjItem : items)
+		for (auto yjItem : Items)
 		{
 			if (Cast<UYJ_WaitingTicketItem>(yjItem) != nullptr)
 			{
@@ -114,17 +105,17 @@ bool UYJ_InventoryComponent::AddItem2(EItemEnum Item)
 	}
 
 	// 아이템 추가하기
-	state = "add";
+	State = "add";
 	
 	if(item->count <= 0)
 	{
 		item->OwningInventory = this;
 		item->World = GetWorld();
 		item->itemIndex = idx;
-		item->inventoryIndex = itemCnt;
+		item->inventoryIndex = ItemCnt;
 		item->count = 1;
-		items.Add(item);
-		itemCnt++;
+		Items.Add(item);
+		ItemCnt++;
 	}
 	else
 	{
@@ -136,10 +127,10 @@ bool UYJ_InventoryComponent::AddItem2(EItemEnum Item)
 	return true;
 }
 
-bool UYJ_InventoryComponent::AddItemByNumber(EItemEnum Item, int32 num)
+bool UYJ_InventoryComponent::AddItemByNumber(EItemEnum Item, int32 Num)
 {
 	// 인벤토리 창이 다 차면 아래 내용 실행하지 않음.
-	if (itemCnt >= Capacity)
+	if (ItemCnt >= Capacity)
 	{
 		return false;
 	}
@@ -158,7 +149,7 @@ bool UYJ_InventoryComponent::AddItemByNumber(EItemEnum Item, int32 num)
 	UYJ_WaitingTicketItem* waitingTicketItem = Cast<UYJ_WaitingTicketItem>(item);
 	if (waitingTicketItem)
 	{
-		for (auto yjItem : items)
+		for (auto yjItem : Items)
 		{
 			if (Cast<UYJ_WaitingTicketItem>(yjItem) != nullptr)
 			{
@@ -176,21 +167,21 @@ bool UYJ_InventoryComponent::AddItemByNumber(EItemEnum Item, int32 num)
 	}
 
 	// 아이템 추가하기
-	state = "add";
+	State = "add";
 
 	if (item->count <= 0)
 	{
 		item->OwningInventory = this;
 		item->World = GetWorld();
 		item->itemIndex = idx;
-		item->inventoryIndex = itemCnt;
-		item->count += num;
-		items.Add(item);
-		itemCnt++;
+		item->inventoryIndex = ItemCnt;
+		item->count += Num;
+		Items.Add(item);
+		ItemCnt++;
 	}
 	else
 	{
-		item->count += num;
+		item->count += Num;
 	}
 	// Update UI
 	OnInventoryUpdated.Broadcast();
@@ -198,11 +189,11 @@ bool UYJ_InventoryComponent::AddItemByNumber(EItemEnum Item, int32 num)
 	return true;
 }
 
-bool UYJ_InventoryComponent::AddItem3(TSubclassOf<class UYJ_Item> item)
+bool UYJ_InventoryComponent::AddItem3(TSubclassOf<UYJ_Item> ItemClass)
 {
-	auto Item = item.GetDefaultObject();
+	auto Item = ItemClass.GetDefaultObject();
 	// 인벤토리 창이 다 차거나 들어오는 Item 이 유효하지 않으면 아래 내용 실행하지 않음.
-	if (items.Num() >= Capacity || !Item)
+	if (Items.Num() >= Capacity || !Item)
 	{
 		return false;
 	}
@@ -211,7 +202,7 @@ bool UYJ_InventoryComponent::AddItem3(TSubclassOf<class UYJ_Item> item)
 	UYJ_WaitingTicketItem* waitingTicketItem = Cast<UYJ_WaitingTicketItem>(Item);
 	if (waitingTicketItem)
 	{
-		for (auto yjItem : items)
+		for (auto yjItem : Items)
 		{
 			if (Cast<UYJ_WaitingTicketItem>(yjItem) != nullptr)
 			{
@@ -229,8 +220,8 @@ bool UYJ_InventoryComponent::AddItem3(TSubclassOf<class UYJ_Item> item)
 
 	Item->OwningInventory = this;
 	Item->World = GetWorld();
-	state = "add";
-	items.Add(Item);
+	State = "add";
+	Items.Add(Item);
 	// Update UI
 	OnInventoryUpdated.Broadcast();
 
@@ -240,16 +231,16 @@ bool UYJ_InventoryComponent::AddItem3(TSubclassOf<class UYJ_Item> item)
 bool UYJ_InventoryComponent::RemoveItem(UYJ_Item* Item)
 {
 	// 인벤토리 창이 비거나 들어오는 Item 이 유효하지 않으면 아래 내용 실행하지 않음.
-	if (items.Num() <= 0 || !Item)
+	if (Items.Num() <= 0 || !Item)
 	{
 		return false;
 	}
 
 	Item->OwningInventory = nullptr;
 	Item->World = nullptr;
-	items[itemCnt] = nullptr;
+	Items[ItemCnt] = nullptr;
 	//Items.RemoveSingle(Item);
-	state = "remove";
+	State = "remove";
 	OnInventoryUpdated.Broadcast();
 	return true;
 }
@@ -258,7 +249,7 @@ bool UYJ_InventoryComponent::RemoveItem(UYJ_Item* Item)
 bool UYJ_InventoryComponent::RemoveItem2(EItemEnum Item)
 {
 	// 인벤토리 창이 비면 아래 내용 실행하지 않음.
-	if (itemCnt <= 0)
+	if (ItemCnt <= 0)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("1"));
 		return false;
@@ -275,7 +266,7 @@ bool UYJ_InventoryComponent::RemoveItem2(EItemEnum Item)
 	UYJ_Item* item = gameInstance->allItems[idx];
 
 	// 아이템 지우기
-	state = "remove";
+	State = "remove";
 
 	if (item->count <= 1)
 	{
@@ -284,10 +275,10 @@ bool UYJ_InventoryComponent::RemoveItem2(EItemEnum Item)
 		item->itemIndex = idx;
 		item->inventoryIndex = -1;
 		item->count = 0;
-		items.RemoveSingle(item);
-		itemCnt--;
+		Items.RemoveSingle(item);
+		ItemCnt--;
 		UE_LOG(LogTemp, Warning, TEXT("Remove Item"));
-		UE_LOG(LogTemp, Warning, TEXT("%d"), items.Num());
+		UE_LOG(LogTemp, Warning, TEXT("%d"), Items.Num());
 	}
 	else
 	{
@@ -301,10 +292,10 @@ bool UYJ_InventoryComponent::RemoveItem2(EItemEnum Item)
 	return true;
 }
 
-bool UYJ_InventoryComponent::RemoveItemByNumber(EItemEnum Item, int32 num)
+bool UYJ_InventoryComponent::RemoveItemByNumber(EItemEnum Item, int32 Num)
 {
 	// 인벤토리 창이 비면 아래 내용 실행하지 않음.
-	if (itemCnt <= 0)
+	if (ItemCnt <= 0)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("1"));
 		return false;
@@ -320,12 +311,12 @@ bool UYJ_InventoryComponent::RemoveItemByNumber(EItemEnum Item, int32 num)
 	int32 idx = (int32)Item;
 	UYJ_Item* item = gameInstance->allItems[idx];
 
-	if (item->count < num) return false;
+	if (item->count < Num) return false;
 
 	// 아이템 지우기
-	state = "remove";
+	State = "remove";
 
-	if (item->count - num <= 0)
+	if (item->count - Num <= 0)
 	{
 		item->OwningInventory = nullptr;
 		item->World = nullptr;
@@ -333,21 +324,26 @@ bool UYJ_InventoryComponent::RemoveItemByNumber(EItemEnum Item, int32 num)
 		item->inventoryIndex = -1;
 		item->count = 0;
 		//Items[ItemCnt] = nullptr;
-		items.RemoveSingle(item);
+		Items.RemoveSingle(item);
 		//Items.SetNum(Capacity);
-		itemCnt--;
+		ItemCnt--;
 		UE_LOG(LogTemp, Warning, TEXT("Remove Item"));
-		UE_LOG(LogTemp, Warning, TEXT("%d"), items.Num());
+		UE_LOG(LogTemp, Warning, TEXT("%d"), Items.Num());
 	}
 	else
 	{
 		//Items[item->InventoryIndex]->Count--;
-		item->count -= num;
+		item->count -= Num;
 		UE_LOG(LogTemp, Warning, TEXT("Minus item count"));
 	}
 	OnInventoryUpdated.Broadcast();
 
 	return true;
+}
+
+bool UYJ_InventoryComponent::RemoveItem3(TSubclassOf<UYJ_Item> ItemClass)
+{
+	return false;
 }
 
 UYJ_Item* UYJ_InventoryComponent::EnumIndexToItem(EItemEnum Item)
@@ -361,7 +357,7 @@ UYJ_Item* UYJ_InventoryComponent::EnumIndexToItem(EItemEnum Item)
 	UYJ_Item* item = gameInstance->allItems[idx];
 	if (item)
 	{
-		for (auto itm : items)
+		for (auto itm : Items)
 		{
 			if (itm == item)
 			{
@@ -372,17 +368,17 @@ UYJ_Item* UYJ_InventoryComponent::EnumIndexToItem(EItemEnum Item)
 	return nullptr;
 }
 
-bool UYJ_InventoryComponent::CheckHaveItemAsYJ_Item(class UYJ_Item* Item)
+bool UYJ_InventoryComponent::CheckItemAsYJ_Item(UYJ_Item* Item)
 {
 	if (Item->inventoryIndex >= 0) return true;
 	else return false;
 }
 
-bool UYJ_InventoryComponent::CheckHaveItemAsEnum(EItemEnum Item)
+bool UYJ_InventoryComponent::CheckItemAsEnum(EItemEnum Item)
 {
 	UYJ_Item* item = UYJ_InventoryComponent::EnumIndexToItem(Item);
 
-	for (auto itm : items)
+	for (auto itm : Items)
 	{
 		if (itm == item)
 		{
@@ -397,112 +393,100 @@ bool UYJ_InventoryComponent::CheckHaveItemAsEnum(EItemEnum Item)
 	//else return false;
 }
 
-bool UYJ_InventoryComponent::MinusCash(int32 minusPrice)
+bool UYJ_InventoryComponent::AddCash(int32 AddPrice)
 {
-	if (cash - minusPrice >= 0)
+	if (Cash - AddPrice >= 0)
 	{
-		cash = cash - minusPrice;
+		Cash = Cash - AddPrice;
 		return true;
 	}
 	else return false;
 }
 
-bool UYJ_InventoryComponent::PlusCash(int32 plusPrice)
+bool UYJ_InventoryComponent::AddAccountBalance(int32 AddPrice)
 {
-	cash = cash + plusPrice;
-	return true;
-}
-
-bool UYJ_InventoryComponent::MinusAccountBalance(int32 minusPrice)
-{
-	if (accountBalance - minusPrice >= 0)
+	if (AccountBalance - AddPrice >= 0)
 	{
-		accountBalance = accountBalance - minusPrice;
+		AccountBalance = AccountBalance - AddPrice;
 		return true;
 	}
 	else return false;
 }
 
-bool UYJ_InventoryComponent::PlusAccountBalance(int32 plusPrice)
-{
-	accountBalance = accountBalance + plusPrice;
-	return true;
-}
-
-bool UYJ_InventoryComponent::Update_BankBook_Interest()
+bool UYJ_InventoryComponent::UpdateBankBookInterest()
 {
 	// 통장이 없다면 리턴
-	if (BankBook.HaveBankBook == false) return true;
+	if (BankBook.bHaveBankBook == false) return true;
 	// 통장이자 매일 더하고, 7일이 지나면 이자주기
-	BankBook.BankBook_PastDate++;
-	BankBook.BankBook_Interest += accountBalance * BankBook.BankBook_Percent / 7;
+	BankBook.BankBookPastDate++;
+	BankBook.BankBookInterest += AccountBalance * BankBook.BankBookPercent / 7;
 
-	if (BankBook.BankBook_PastDate >= 7)
+	if (BankBook.BankBookPastDate >= 7)
 	{
-		accountBalance += BankBook.BankBook_Interest;
-		BankBook.BankBook_Interest = 0;
-		BankBook.BankBook_PastDate = 0;
+		AccountBalance += BankBook.BankBookInterest;
+		BankBook.BankBookInterest = 0;
+		BankBook.BankBookPastDate = 0;
 	}
 
 	return true;
 }
 
-bool UYJ_InventoryComponent::Update_Loan()
+bool UYJ_InventoryComponent::UpdateLoan()
 {
 	// 만약 갚을 대출금이 없으면 리턴
-	if (Loan.UnpaidLoan == false)
+	if (Loan.bUnpaidLoan == false)
 	{
-		Loan.Loan_PastDate = 0;
-		Loan.Loan_Interest = 0;
+		Loan.LoanPastDate = 0;
+		Loan.LoanInterest = 0;
 		return true;
 	}
 
 	// 대출금을 갚지않았고, 7일이 지났으면 이자가 붙음
-	Loan.Loan_PastDate++;
-	if (Loan.Loan_PastDate >= 7)
+	Loan.LoanPastDate++;
+	if (Loan.LoanPastDate >= 7)
 	{
-		Loan.Loan_Interest += Loan.Loan_Value * Loan.Loan_Percent;
+		Loan.LoanInterest += Loan.LoanValue * Loan.LoanPercent;
 	}
 
 	return true;
 }
 
-int32 UYJ_InventoryComponent::Get_TotalLoanAmount()
+int32 UYJ_InventoryComponent::GetTotalLoanAmount()
 {
-	return Loan.Loan_Interest + Loan.Loan_Value;
+	return Loan.LoanInterest + Loan.LoanValue;
 }
 
-bool UYJ_InventoryComponent::Update_Tax()
+bool UYJ_InventoryComponent::UpdateTax()
 {
 	// 세금 고지한지 7일 지났으면, 세금율 랜덤으로 세금계산
-	Tax.Tax_PastDate++;
-	if (Tax.Tax_PastDate % 7 == 0)
+	Tax.TaxPastDate++;
+	if (Tax.TaxPastDate % 7 == 0)
 	{
-		Tax.Tax_Content = FMath::RandRange(0, 4);
+		Tax.TaxContent = FMath::RandRange(0, 4);
 
-		switch (Tax.Tax_Content)
+		switch (Tax.TaxContent)
 		{
 		case 0:
-			Tax.Tax_Percent = 0.03;
+			Tax.TaxPercent = 0.03;
 			break;
 		case 1:
-			Tax.Tax_Percent = 0.05;
+			Tax.TaxPercent = 0.05;
 			break;
 		case 2:
-			Tax.Tax_Percent = 0.08;
+			Tax.TaxPercent = 0.08;
 			break;
 		case 3: 
-			Tax.Tax_Percent = 0.1;
+			Tax.TaxPercent = 0.1;
 			break;
 		case 4:
-			Tax.Tax_Percent = 0.15;
+			Tax.TaxPercent = 0.15;
 			break;
 		default:
 			break;
 		}
 
-		Tax.Tax_Interest = (int32)((accountBalance + cash) * Tax.Tax_Percent);
-		onTaxUpdated.Broadcast();
+		Tax.TaxInterest = (int32)((AccountBalance + Cash) * Tax.TaxPercent);
+		OnTaxUpdated.Broadcast();
 	}
 
 	return true;
