@@ -198,6 +198,45 @@ bool UYJ_InventoryComponent::AddItemByNumber(EItemEnum Item, int32 num)
 	return true;
 }
 
+bool UYJ_InventoryComponent::AddItem3(TSubclassOf<class UYJ_Item> item)
+{
+	auto Item = item.GetDefaultObject();
+	// 인벤토리 창이 다 차거나 들어오는 Item 이 유효하지 않으면 아래 내용 실행하지 않음.
+	if (items.Num() >= Capacity || !Item)
+	{
+		return false;
+	}
+
+	// Item이 은행 대기표일 때, Items에 대기표가 있으면 아래 내용 실행하지 않음.
+	UYJ_WaitingTicketItem* waitingTicketItem = Cast<UYJ_WaitingTicketItem>(Item);
+	if (waitingTicketItem)
+	{
+		for (auto yjItem : items)
+		{
+			if (Cast<UYJ_WaitingTicketItem>(yjItem) != nullptr)
+			{
+				return false;
+			}
+		}
+
+		UWorld* const World = GetWorld();
+		AYJ_GameModeBase* GameMode;
+		if (World) {
+			GameMode = Cast<AYJ_GameModeBase>(UGameplayStatics::GetGameMode(World));
+			waitingTicketItem->ItemWaitingNumber = GameMode->waitingNumber + 1;
+		}
+	}
+
+	Item->OwningInventory = this;
+	Item->World = GetWorld();
+	state = "add";
+	items.Add(Item);
+	// Update UI
+	OnInventoryUpdated.Broadcast();
+
+	return true;
+}
+
 bool UYJ_InventoryComponent::RemoveItem(UYJ_Item* Item)
 {
 	// 인벤토리 창이 비거나 들어오는 Item 이 유효하지 않으면 아래 내용 실행하지 않음.

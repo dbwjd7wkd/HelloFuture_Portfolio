@@ -120,6 +120,8 @@ public:
 		bool AddItem2(EItemEnum Item);
 	UFUNCTION(BlueprintCallable)
 		bool AddItemByNumber(EItemEnum Item, int32 num);
+	UFUNCTION(BlueprintCallable)
+		bool AddItem3(class TSubclassOf<class UYJ_Item> item);
 
 	UFUNCTION(BlueprintCallable)
 		bool RemoveItem(class UYJ_Item* Item);
