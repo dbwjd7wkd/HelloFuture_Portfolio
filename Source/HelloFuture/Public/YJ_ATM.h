@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "Blueprint/UserWidget.h"
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "YJ_ATM.generated.h"
@@ -11,50 +12,49 @@ class HELLOFUTURE_API AYJ_ATM : public AActor
 {
 	GENERATED_BODY()
 	
-public:	
-	// Sets default values for this actor's properties
+public:
+	// 초기값 셋팅
 	AYJ_ATM();
-
-protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
+	/** 오버랩 */
+	// 캐릭터가 ATM기에 오버랩하면 ATM UI 띄우기
 	UFUNCTION() 
 		void OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-
+	// 캐릭터의 ATM기 오버랩이 끝나면 ATM UI 숨기기
 	UFUNCTION()
 		void OnOverlapEnd(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
+private:
+	/** ATM UI */
+	// ATM UI 띄우기
 	UFUNCTION(BlueprintCallable)
-		void ShowWidget();
-
+		void ShowATMWidget();
+	// ATM UI 숨기기
 	UFUNCTION(BlueprintCallable)
-		void HideWidget();
+		void HideATMWidget();
 
 public:
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Camera, meta = (AllowPrivateAccess = "true"))
-		class UBoxComponent* collision;
+	// box콜리전
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "ATM")
+		class UBoxComponent* BoxCollision;
+	// 메시
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "ATM")
+		class UStaticMeshComponent* StaticMesh;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Camera, meta = (AllowPrivateAccess = "true"))
-		class UStaticMeshComponent* mesh;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Camera, meta = (AllowPrivateAccess = "true"))
-		bool isAvailable;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Camera, meta = (AllowPrivateAccess = "true"))
-		class AHelloFutureCharacter* player;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Camera, meta = (AllowPrivateAccess = "true"))
-		class APlayerController* PlayerController;
+	// ATM UI 클래스
+	// @Warning 블루프린트에서 ATM UI 클래스레퍼런스를 넣어줘야 함.
+	// "WidgetBlueprint'/Game/YJ/UI/ATM/WBP_ATM'"
+	UPROPERTY(EditDefaultsOnly, Category = "ATM")
+		TSubclassOf<UUserWidget> ATMWidgetClass;
 
 private:
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Camera, meta = (AllowPrivateAccess = "true"))
-		TSubclassOf<class UUserWidget> MainMenuWidgetClass;
+	// ATM UI 인스턴스
+	UPROPERTY(VisibleAnywhere)
+		UUserWidget* ATMWidget;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Camera, meta = (AllowPrivateAccess = "true"))
-		class UUserWidget* MainMenu;
+	// 오버랩 된 플레이어
+	UPROPERTY(VisibleAnywhere)
+		class AHelloFutureCharacter* OverlapPlayer;
+
 };

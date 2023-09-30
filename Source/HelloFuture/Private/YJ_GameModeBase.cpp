@@ -8,29 +8,27 @@
 
 void AYJ_GameModeBase::AddWaitingNumber()
 {
-	waitingNumber++;
+	WaitingNumber++;
 }
 
 void AYJ_GameModeBase::MinusWaitingNumber()
 {
-	waitingNumber--;
+	WaitingNumber--;
 }
 
-bool AYJ_GameModeBase::CheckMyOrder(AHelloFutureCharacter* player)
+bool AYJ_GameModeBase::CheckMyOrder(AHelloFutureCharacter* Player)
 {
 	// 1. 들고있는 대기표 아이템 번호가 지금 게임모드의 순서 order와 맞는지 확인
-	//player = Cast<AHelloFutureCharacter>(GetOwner());
-
-	if (player)
+	if (Player)
 	{
-		for (auto item : player->inventory->Items)
+		for (auto Item : Player->inventory->Items)
 		{
 			// 2. 만약 대기 아이템이 있다면
-			UYJ_WaitingTicketItem* waitingTicketItem = Cast<UYJ_WaitingTicketItem>(item);
-			if (waitingTicketItem)
+			UYJ_WaitingTicketItem* WaitingTicketItem = Cast<UYJ_WaitingTicketItem>(Item);
+			if (WaitingTicketItem)
 			{
 				// 만약 대기 아이템 번호가 번호판 순서와 같다면 true 반환 (대화시작)
-				if (waitingTicketItem->ItemWaitingNumber == waitingNumber) return true;
+				if (WaitingTicketItem->ItemWaitingNumber == WaitingNumber) return true;
 				// 순서가 다르다면 false 반환
 				else return false;
 			}

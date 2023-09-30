@@ -15,13 +15,13 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnTaxUpdated);
 UENUM(BlueprintType)
 enum class EItemEnum : uint8
 {
-	Apple = 0,
+	NONE = 0,
+	Apple,
 	ClothingHelmet,
 	ClothingVest,
 	CornItem,
 	CornSeed,
 	Radish,
-	Bread,
 	Lemon,
 	Pumpkin,
 	PumpkinSeed,
@@ -34,11 +34,12 @@ enum class EItemEnum : uint8
 	Fertilizer2,
 	MagicPowder,
 	Tonic,
+	E_MAX,
 };
 
-// 통장이자
+// 통장
 USTRUCT(Atomic, BlueprintType)
-struct FBankBookInterestStruct
+struct FBankBookStruct
 {
 	GENERATED_BODY()
 
@@ -111,85 +112,97 @@ class HELLOFUTURE_API UYJ_InventoryComponent : public UActorComponent
 	GENERATED_BODY()
 
 public:	
-	// 속성들 초기값 성정
+	/** 속성 초기값 설정 */
 	UYJ_InventoryComponent();
+	void BeginPlay();
 
-	virtual void BeginPlay() override;
-	// 아이템 관련 함수
+	/** 아이템 관련 함수 */
+	// 인벤토리에 아이템 추가1
 	UFUNCTION(BlueprintCallable)
 		bool AddItem(UYJ_Item* Item);
+	// 인벤토리에 아이템 추가2
 	UFUNCTION(BlueprintCallable)
 		bool AddItem2(EItemEnum Item);
+	// 인벤토리에 아이템 추가3
 	UFUNCTION(BlueprintCallable)
 		bool AddItem3(TSubclassOf<UYJ_Item> ItemClass);
+	// 갯수만큼 인벤토리에 아이템 추가
 	UFUNCTION(BlueprintCallable)
 		bool AddItemByNumber(EItemEnum Item, int32 Num);
-
+	// 인벤토리에 아이템 제거1
 	UFUNCTION(BlueprintCallable)
 		bool RemoveItem(UYJ_Item* Item);
+	// 인벤토리에 아이템 제거2
 	UFUNCTION(BlueprintCallable)
 		bool RemoveItem2(EItemEnum Item);
+	// 인벤토리에 아이템 제거3
 	UFUNCTION(BlueprintCallable)
 		bool RemoveItem3(TSubclassOf<UYJ_Item> ItemClass);
+	// 갯수만큼 인벤토리에 아이템 제거
 	UFUNCTION(BlueprintCallable)
 		bool RemoveItemByNumber(EItemEnum Item, int32 Num);
-
+	// 아이템 enum -> 아이템 객체로 변환
 	UFUNCTION(BlueprintCallable)
 		UYJ_Item* EnumIndexToItem(EItemEnum Item);
+	// 해당 아이템을 가지고 있는지 확인
 	UFUNCTION(BlueprintCallable)
 		bool CheckItemAsYJ_Item(UYJ_Item* Item);
+	// 아이템 enum으로 해당 아이템을 가지고 있는지 확인
 	UFUNCTION(BlueprintCallable)
 		bool CheckItemAsEnum(EItemEnum Item);
 
-	// 돈 관련 함수
+	/**돈 관련 함수*/
+	// 현금 더하거나 빼기
 	UFUNCTION(BlueprintCallable)
 		bool AddCash(int32 AddPrice);
+	// 계좌잔금 더하거나 빼기
 	UFUNCTION(BlueprintCallable)
 		bool AddAccountBalance(int32 AddPrice);
 
-	// 통장이자 관련 함수
+	/**통장이자, 대출금, 세금 관련 함수*/
+	// 통장이자 업데이트
 	UFUNCTION(BlueprintCallable)
 		bool UpdateBankBookInterest();
-	// 대출 관련 함수
+	// 대출금 업데이트
 	UFUNCTION(BlueprintCallable)
 		bool UpdateLoan();
+	// 갚아야 할 대출금 반환
 	UFUNCTION(BlueprintCallable)
 		int32 GetTotalLoanAmount();
-	// 세금 관련 함수
+	// 세금 업데이트
 	UFUNCTION(BlueprintCallable)
 		bool UpdateTax();
 
 public:
-	UPROPERTY(EditDefaultsOnly, Instanced)
-		TArray<UYJ_Item*> DefaultItems;
+	/** 인벤토리 칸 정보 */
+	// 인벤토리 칸 용량
 	UPROPERTY(EditDefaultsOnly, Category = "Inventory")
 		int32 Capacity;
+	// 인벤토리 가로칸 갯수
 	UPROPERTY(EditDefaultsOnly, blueprintReadWrite, Category = "Inventory")
 		int32 ColumnLength;
+	// 인벤토리 세로칸 갯수
 	UPROPERTY(EditDefaultsOnly, blueprintReadWrite, Category = "Inventory")
 		int32 RowLength;
+
+	/** 가지고 있는 것들 정보 */
+	// 가지고 있는 인벤토리 아이템
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Items")
+		TArray<UYJ_Item*> Items;
+	// 가지고 있는 인벤토리 아이템 갯수
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Items")
+		int32 ItemCnt;
+	// 계좌잔고
 	UPROPERTY(EditDefaultsOnly, blueprintReadWrite, Category = "Inventory")
 		int32 AccountBalance;
+	// 현금잔고
 	UPROPERTY(EditDefaultsOnly, blueprintReadWrite, Category = "Inventory")
 		int32 Cash;
 
-	UPROPERTY(BlueprintAssignable, Category = "Inventory")
-		FOnInventoryUpdated	OnInventoryUpdated;
-	UPROPERTY(BlueprintAssignable, Category = "Tax")
-		FOnTaxUpdated OnTaxUpdated;
-
-	UPROPERTY(EditDefaultsOnly, blueprintReadWrite, Category = "Inventory")
-		FName State; // add, remove
-
-	// 인벤토리 아이템
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Items")
-		TArray<UYJ_Item*> Items;
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Items")
-		int32 ItemCnt;
-
-	// 통장이자
+	/** 통장, 대출, 세금 이자에 관한 정보 */
+	// 통장
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "BankBook")
-		FBankBookInterestStruct BankBook;
+		FBankBookStruct BankBook;
 	// 대출
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Loan")
 		FLoanStruct Loan;
@@ -197,10 +210,11 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Tax")
 		FTaxStruct Tax;
 
-	//// SaveGame에 넣을 인벤토리 아이템 정보
-	//UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Inventory")
-	//	TArray<int32> inventoryCnt; // 인벤토리의 각 아이템 갯수
-
-	//UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Inventory")
-	//	TArray<int32> inventoryIdx; // 인벤토리의 각 아이템 인덱스
+	/** 델리게이트 */
+	// 인벤토리 델리게이트
+	UPROPERTY(BlueprintAssignable, Category = "Inventory")
+		FOnInventoryUpdated	OnInventoryUpdated;
+	// 세금 델리게이트
+	UPROPERTY(BlueprintAssignable, Category = "Tax")
+		FOnTaxUpdated OnTaxUpdated;
 };

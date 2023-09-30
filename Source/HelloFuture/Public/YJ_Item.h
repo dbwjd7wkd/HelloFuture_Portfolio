@@ -15,64 +15,52 @@ class HELLOFUTURE_API UYJ_Item : public UObject
 	GENERATED_BODY()
 	
 public:
-
-	UYJ_Item();
-
+	// 레벨 가져오기
 	virtual class UWorld* GetWorld() const { return World; };
 
+	// 속성 초기값 설정
+	UYJ_Item();
+
+public:
+	// 현재 레벨
 	UPROPERTY(Transient)
-	class UWorld* World;
-
-	/**The text for using the item. (Equip, Eat, etc)*/
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Item")
-		FText Category;
-
-	///**The mesh to display for this items pickup*/
-	//UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Item")
-	//	class UStaticMesh* PickupMesh;
-
-	/**The thumbnail for this item*/
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Item")
-		class UTexture2D* Thumbnail;
-
-	/**The display name for this item in the inventory*/
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Item")
-		FText ItemDisplayName;
-
-	/**An optional description for the item*/
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Item", meta = (MultiLine = true))
-		FText ItemDescription;
-
-	/**The price for this item*/
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Item")
-		int32 Price;
-
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Item")
-		int32 MinPrice;
-		
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Item")
-		int32 MaxPrice;
-
-	/**The count for this item*/
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Item")
-		int32 count;
-
-	/**The InventoryIndex for this item*/
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Item")
-		int32 inventoryIndex;
-
-	/**The ItemIndex for this item*/
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Item")
-		int32 itemIndex;
-
-	/**The inventory that owns this item*/
+		class UWorld* World;
+	//  인벤토리
 	UPROPERTY()
 		class UYJ_InventoryComponent* OwningInventory;
 
-	virtual void Use(class AHelloFutureCharacter* Character);
+	/**아이템 정보*/
+	// 사용할 아이템 카테고리 (ex. use, equip, etc)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Item")
+		FText Category;
+	// 아이템 썸네일
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Item")
+		UTexture2D* Thumbnail;
+	// 아이템 이름
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Item")
+		FText ItemDisplayName;
+	// 아이템 설명
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Item", meta = (MultiLine = true))
+		FText ItemDescription;
+	// 아이템 가격
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Item")
+		int32 Price;
+	// 아이템 랜덤 가격 최솟값
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Item")
+		int32 MinPrice;
+	// 아이템 랜덤 가격 최댓값
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Item")
+		int32 MaxPrice;
+	// 아이템 인덱스
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Item")
+		int32 ItemIndex;
 
-	UFUNCTION(BlueprintImplementableEvent)
-		void OnUse(class AHelloFutureCharacter* Character);
+	/** 플레이어의 현재 아이템 인벤토리 정보*/
+	// 아이템 갯수
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Item")
+		int32 Count;
+	// 아이템 인벤토리 인덱스
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Item")
+		int32 InventoryIndex;
 
 };

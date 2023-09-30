@@ -4,41 +4,42 @@
 #include "YJ_GameInstance.h"
 #include "YJ_Item.h"
 #include "SocketSubsystem.h"
-//#include "YJ_InventoryComponent.h"
 
 UYJ_GameInstance::UYJ_GameInstance()
 {
-    int length = 13;
-    for (int i=0; i < length; i++)
+    // ClothingShopMap에서 구매한 옷을 배치할 위치 백터 배열에 추가
+    int32 Length = 13;
+    for (int32 i = 0; i < Length; i++)
     {
-        int x = 100;
-        int y = -750 + 100 * i;
-        int z = 100;
-        closetSpawnLocation.Add(FVector(x,y,z));
+        int32 X = 100;
+        int32 Y = -750 + 100 * i;
+        int32 Z = 100;
+        closetSpawnLocation.Add(FVector(X, Y, Z));
     }
     
 }
 
-// 아이템 배열에서 선택해서 가져오기
-UYJ_Item* UYJ_GameInstance::GetItemAsEnum(EItemEnum itemEnum)
+UYJ_Item* UYJ_GameInstance::GetItemAsEnum(EItemEnum ItemEnum)
 {
-	UWorld* world = GetWorld();
-	if (!world) return false;
-	UYJ_GameInstance* gameInstance = Cast<UYJ_GameInstance>(world->GetGameInstance());
-	if (!gameInstance) return false;
+    // 게임인스턴스 가져오기
+	UWorld* World = GetWorld();
+	if (!World) return false;
+	UYJ_GameInstance* GameInstance = Cast<UYJ_GameInstance>(World->GetGameInstance());
+	if (!GameInstance) return false;
 
-	int32 idx = (int32)itemEnum;
-	UYJ_Item* item = gameInstance->allItems[idx];
+    // 아이템 배열에서 enum을 인덱스로 선택해서 가져오기
+	int32 ItemIdx = (int32)ItemEnum;
+	UYJ_Item* Item = GameInstance->allItems[ItemIdx];
 
-    return item;
+    return Item;
 }
 
-// 현재 플레이어 컴퓨터 주소 가져오기
 FString UYJ_GameInstance::GetMyIpAddress()
 {
+    // 로컬주소 string으로 반환
     FString IpAddr("NONE");
-    bool canBind = false;
-    TSharedRef<FInternetAddr> LocalIp = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->GetLocalHostAddr(*GLog, canBind);
+    bool bCanBind = false;
+    TSharedRef<FInternetAddr> LocalIp = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->GetLocalHostAddr(*GLog, bCanBind);
     if (LocalIp->IsValid())
     {
         IpAddr = LocalIp->ToString(false);

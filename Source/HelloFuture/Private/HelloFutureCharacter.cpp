@@ -175,9 +175,9 @@ void AHelloFutureCharacter::SaveGame()
 
 	for (int32 i = 0; i < inventory->ItemCnt; i++)
 	{
-		int32 idx = inventory->Items[i]->itemIndex;
+		int32 idx = inventory->Items[i]->ItemIndex;
 		saveGameInstance->inventoryIdx[idx] = i;
-		saveGameInstance->inventoryCnt[idx] = inventory->Items[i]->count;
+		saveGameInstance->inventoryCnt[idx] = inventory->Items[i]->Count;
 	}
 	// 인벤토리 정보들 저장
 	saveGameInstance->accountBalance = inventory->AccountBalance;
@@ -227,7 +227,7 @@ void AHelloFutureCharacter::LoadGame()
 	// 모든 아이템을 차례대로 확인해, 각 아이템들의 정보 로드
 	for (int32 i = 0; i < gameInstance->allItems.Num(); i++)
 	{
-		gameInstance->allItems[i]->itemIndex = i;
+		gameInstance->allItems[i]->ItemIndex = i;
 		// 아이템 갯수가 늘어났을 경우 오류 대비
 		if (loadGameInstance->inventoryCnt.Num() < i + 1)
 		{
@@ -243,8 +243,8 @@ void AHelloFutureCharacter::LoadGame()
 		// 인벤토리에 현재 아이템 객체 넣기
 		inventory->Items[idx] = gameInstance->allItems[i];
 		// 아이템 객체에 정보 넣기
-		inventory->Items[idx]->count = cnt;
-		inventory->Items[idx]->inventoryIndex = idx;
+		inventory->Items[idx]->Count = cnt;
+		inventory->Items[idx]->InventoryIndex = idx;
 	}
 
 	// items 로드
@@ -708,15 +708,6 @@ void AHelloFutureCharacter::ClearInteractiveInRange(class AOH_InteractiveBase* I
 void AHelloFutureCharacter::InitializeGame()
 {
 
-}
-
-void AHelloFutureCharacter::UseItem(class UYJ_Item* Item)
-{
-	if (Item)
-	{
-		Item->Use(this);
-		Item->OnUse(this); // bp event
-	}
 }
 
 void AHelloFutureCharacter::Chatting()

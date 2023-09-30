@@ -2,4 +2,3 @@
 
 
 #include "YJ_WaitingTicketItem.h"
-

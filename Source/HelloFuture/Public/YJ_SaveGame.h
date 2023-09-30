@@ -139,7 +139,7 @@ public:
 
     // 통장이자
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "BankBook")
-        FBankBookInterestStruct BankBook;
+        FBankBookStruct BankBook;
 
     // 대출
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Loan")

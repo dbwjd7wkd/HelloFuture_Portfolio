@@ -129,11 +129,6 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Inventory, meta = (AllowPrivateAccess = "true"))
 	class UYJ_InventoryComponent* inventory;
 
-	UFUNCTION(BlueprintCallable, Category = "Items")
-		void UseItem(class UYJ_Item* Item);
-
-
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EPressed")
 		bool isEPressed;
 
