@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include "YJ_Item.h"
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "YJ_InventoryComponent.generated.h"
@@ -119,34 +118,34 @@ public:
 	/** 아이템 관련 함수 */
 	// 인벤토리에 아이템 추가1
 	UFUNCTION(BlueprintCallable)
-		bool AddItem(UYJ_Item* Item);
+		bool AddItem(class UYJ_Item* Item);
 	// 인벤토리에 아이템 추가2
 	UFUNCTION(BlueprintCallable)
 		bool AddItem2(EItemEnum Item);
 	// 인벤토리에 아이템 추가3
 	UFUNCTION(BlueprintCallable)
-		bool AddItem3(TSubclassOf<UYJ_Item> ItemClass);
+		bool AddItem3(TSubclassOf<class UYJ_Item> ItemClass);
 	// 갯수만큼 인벤토리에 아이템 추가
 	UFUNCTION(BlueprintCallable)
 		bool AddItemByNumber(EItemEnum Item, int32 Num);
 	// 인벤토리에 아이템 제거1
 	UFUNCTION(BlueprintCallable)
-		bool RemoveItem(UYJ_Item* Item);
+		bool RemoveItem(class UYJ_Item* Item);
 	// 인벤토리에 아이템 제거2
 	UFUNCTION(BlueprintCallable)
 		bool RemoveItem2(EItemEnum Item);
 	// 인벤토리에 아이템 제거3
 	UFUNCTION(BlueprintCallable)
-		bool RemoveItem3(TSubclassOf<UYJ_Item> ItemClass);
+		bool RemoveItem3(TSubclassOf<class UYJ_Item> ItemClass);
 	// 갯수만큼 인벤토리에 아이템 제거
 	UFUNCTION(BlueprintCallable)
 		bool RemoveItemByNumber(EItemEnum Item, int32 Num);
 	// 아이템 enum -> 아이템 객체로 변환
 	UFUNCTION(BlueprintCallable)
-		UYJ_Item* EnumIndexToItem(EItemEnum Item);
+		class UYJ_Item* EnumIndexToItem(EItemEnum Item);
 	// 해당 아이템을 가지고 있는지 확인
 	UFUNCTION(BlueprintCallable)
-		bool CheckItemAsYJ_Item(UYJ_Item* Item);
+		bool CheckItemAsYJ_Item(class UYJ_Item* Item);
 	// 아이템 enum으로 해당 아이템을 가지고 있는지 확인
 	UFUNCTION(BlueprintCallable)
 		bool CheckItemAsEnum(EItemEnum Item);
@@ -188,7 +187,7 @@ public:
 	/** 가지고 있는 것들 정보 */
 	// 가지고 있는 인벤토리 아이템
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Items")
-		TArray<UYJ_Item*> Items;
+		TArray<class UYJ_Item*> Items;
 	// 가지고 있는 인벤토리 아이템 갯수
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Items")
 		int32 ItemCnt;

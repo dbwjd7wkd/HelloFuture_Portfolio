@@ -3,38 +3,24 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Character.h"
-#include "Minsu_Activate.h"
-#include "Minsu_PlantSeed.h"
-#include "YJ_SaveGame.h" // save game
-#include "Kismet/GameplayStatics.h" // save game
-#include "Minsu_ShakeTree.h"
-#include "Engine/SkeletalMesh.h"
-#include "Materials/MaterialInterface.h"
+#include "GameFramework/Character.h" // 상속
+#include "Minsu_Activate.h" // 상속
+#include "Minsu_PlantSeed.h" // 상속
+#include "Minsu_ShakeTree.h" // 상속
+#include "YJ_SaveGame.h" // save game 구조체 사용
+#include "Kismet/GameplayStatics.h" // save game 구조체 사용
 #include "HelloFutureCharacter.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FSaveGameDelegate);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FLoadGameDelegate);
-//DECLARE_MULTICAST_DELEGATE_OneParam(FPlayerInputDelegate, class UInputComponent*)
-
-//USTRUCT(Atomic, BlueprintType)
-//struct FcloseBoughtMStruct
-//{
-//	GENERATED_BODY()
-//	public:
-//		// 구매한 옷 순서대로 in 옷장(Material array)-내부 배열
-//		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ClosetBought")
-//			TArray<UMaterialInterface*> closetBoughtMaterial;
-//};
 
 UCLASS(config = Game)
 class AHelloFutureCharacter : public ACharacter, public IMinsu_Activate, public IMinsu_PlantSeed, public IMinsu_ShakeTree
 {
 	GENERATED_BODY()
 
-
-		/** Camera boom positioning the camera behind the character */
-		UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	/** Camera boom positioning the camera behind the character */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 		class USpringArmComponent* CameraBoom;
 
 	/** Follow camera */
@@ -47,13 +33,11 @@ public:
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
 		float BaseTurnRate;
-
 	/** Base look up/down rate, in deg/sec. Other scaling may affect final rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
 		float BaseLookUpRate;
 
 	/** save game**/
-public:
 	UFUNCTION(BlueprintCallable)
 	void InitializeGame();
 	UFUNCTION(BlueprintCallable)
@@ -62,31 +46,24 @@ public:
 	void LoadGame();
 
 protected:
-
 	/** Resets HMD orientation in VR. */
 	void OnResetVR();
-
 	/** Called for forwards/backward input */
 	void MoveForward(float Value);
-
 	/** Called for side to side input */
 	void MoveRight(float Value);
-
 	/**
 	 * Called via input to turn at a given rate.
 	 * @param Rate	This is a normalized rate, i.e. 1.0 means 100% of desired turn rate
 	 */
 	void TurnAtRate(float Rate);
-
 	/**
 	 * Called via input to turn look up/down at a given rate.
 	 * @param Rate	This is a normalized rate, i.e. 1.0 means 100% of desired turn rate
 	 */
 	void LookUpAtRate(float Rate);
-
 	/** Handler for when a touch input begins. */
 	void TouchStarted(ETouchIndex::Type FingerIndex, FVector Location);
-
 	/** Handler for when a touch input stops. */
 	void TouchStopped(ETouchIndex::Type FingerIndex, FVector Location);
 

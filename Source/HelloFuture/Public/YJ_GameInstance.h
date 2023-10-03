@@ -5,7 +5,6 @@
 
 #include "CoreMinimal.h"
 #include "Engine/GameInstance.h"
-#include "YJ_InventoryComponent.h"
 #include "YJ_GameInstance.generated.h"
 
 UCLASS()

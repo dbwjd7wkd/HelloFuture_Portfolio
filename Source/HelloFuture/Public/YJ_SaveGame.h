@@ -9,18 +9,7 @@
 #include "YJ_InventoryComponent.h"
 #include "YJ_SaveGame.generated.h"
 
-/**
- * 
- */
-//UENUM(BlueprintType)
-//enum class EItem : uint8
-//{
-//    E_Warrior = 0   UMETA(DisplayName = "Warrior"),	//! DisplayName은 언리얼 에디터, 블루프린트에서 표시되는 이름입니다.
-//    E_Mage			UMETA(DisplayName = "Mage"),
-//    E_Archer		UMETA(DisplayName = "Archer"),
-//
-//    E_MAX,
-//};
+// 옷 카테고리 enum
 UENUM(BlueprintType)
 enum class EClosetBoughtCategory : uint8
 {
@@ -40,20 +29,20 @@ enum class EClosetBoughtCategory : uint8
     Category14 UMETA(DisplayName = "Hair_Acc_BB"),
 };
 
-
+// 구매한 옷 구조체
 USTRUCT(Atomic, BlueprintType)
 struct FcloseBoughtMStruct
 {
     GENERATED_BODY()
-public:
-    // 구매한 옷 순서대로 in 옷장(Material array)-내부 배열
 
+public:
+    // 옷 스켈레탈 메시
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ClosetBought")
         USkeletalMesh* closetBoughtMesh;
-
+    // 옷 머티리얼
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ClosetBought")
         TArray<UMaterialInterface*> closetBoughtMaterial;
-
+    // 옷 카테고리
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ClosetBought")
        EClosetBoughtCategory closetBoughtCategory;
 };
@@ -64,95 +53,81 @@ class HELLOFUTURE_API UYJ_SaveGame : public USaveGame
 	GENERATED_BODY()
 
 public:
-
     UYJ_SaveGame();
 
-    // save slot
-    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Basic)
+    /** save slot 정보*/
+    // save slot 이름
+    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Basic")
         FString SaveSlotName;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Basic)
+    // save slot 인덱스
+    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Basic")
         int32 UserIndex;
 
-    // 플레이어 정보
-    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Basic)
+    /** 플레이어 정보 */
+    // 플레이어 이름
+    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Basic")
         FText PlayerName;
-
+    // 플레이어가 게임 내에서 플레이 한 시간(단위: 일)
     UPROPERTY(VisibleAnywhere, Category = "Basic")
-        float time;
+        float Time;
 
-    // 인벤토리
+    /** 옷 정보 */
+    // 구매한 옷
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BoughtClothes")
+        TMap<FString, bool> BoughtClothes;
+    // 구매한 옷 순서대로 in 옷장(Material array)-외부 배열
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ClosetBought")
+        TArray<FcloseBoughtMStruct> ClosetBoughts;
+
+    /** 인벤토리 정보 */
+    // 통장잔고
     UPROPERTY(VisibleAnywhere, Category = "Inventory")
-        int32 accountBalance;
-
+        int32 AccountBalance;
+    // 현금
     UPROPERTY(VisibleAnywhere, Category = "Inventory")
-        int32 cash;
-
+        int32 Cash;
     //UPROPERTY(VisibleAnywhere, Category = "Inventory")
     //    int32 columnLength;
-
     //UPROPERTY(VisibleAnywhere, Category = "Inventory")
     //    int32 rowLength;
-    //
     //UPROPERTY(VisibleAnywhere, Category = "Inventory")
     //    int32 Capacity;
 
-    // 인벤토리 아이템 정보
+    /** 인벤토리 아이템 정보 */
+    // 인벤토리 내 가진 아이템 갯수
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Inventory")
-        TArray<int32> inventoryIdx; // 인벤토리의 각 아이템 인덱스
-
+        int32 ItemCnt;
+    // 인벤토리의 각 아이템 인덱스
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Inventory")
-        TArray<int32> inventoryCnt; // 인벤토리의 각 아이템 갯수
-
+        TArray<int32> InventoryIdxArray;
+    // 인벤토리의 각 아이템 갯수
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Inventory")
-        int32 itemCnt;
-
+        TArray<int32> InventoryCntArray;
     // 삭제 예정
     //UPROPERTY(VisibleAnywhere, Category = "Inventory")
     //    TArray<class UYJ_Item*> Items;
 
-
-    // 구매한 옷
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BoughtClothes")
-        TMap<FString, bool> BoughtClothes;
-
-    // 퀘스트
-    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Quest")
-    UActorComponent* saveQuest;
-
-    //// 구매한 옷 순서대로 in 옷장(array)
-    //UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ClosetBought")
-    //    TArray<FString> closetBought;
-
-    /*
-    // 구매한 옷 순서대로 in 옷장(Mesh array)
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ClosetBought")
-        TArray<USkeletalMesh*> closetBoughtMesh;
-
-    // 구매한 옷 순서대로 in 옷장(Material array)-외부 배열
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ClosetBought")
-        TArray<FcloseBoughtMStruct> closetBoughtMaterialStruct;
-    */
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ClosetBought")
-        TArray<FcloseBoughtMStruct> closetBoughts;
-
+    /** 신용 관련 정보 */
     // 통장이자
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "BankBook")
         FBankBookStruct BankBook;
-
     // 대출
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Loan")
         FLoanStruct Loan;
-
     // 세금
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Tax")
         FTaxStruct Tax;
 
+    /** 퀘스트 정보 */
+    // 퀘스트
+    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Quest")
+    UActorComponent* SaveQuest;
+
+    /** 흐른 시간 정보 */
 	// 시간
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Time")
-        int32 worldTime;
-
+        int32 WorldTime;
+    // 구체적인 시간 구조체
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Time")
-		FDateTime worldTime_Structure;
+		FDateTime WorldTimeStructure;
 };

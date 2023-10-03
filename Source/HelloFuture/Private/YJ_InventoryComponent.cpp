@@ -2,12 +2,11 @@
 
 
 #include "YJ_InventoryComponent.h"
-#include "YJ_Item.h"
 #include "Kismet/GameplayStatics.h"
-#include "YJ_GameModeBase.h"
-#include "YJ_WaitingTicketItem.h"
-#include "YJ_GameModeBase.h"
 #include "YJ_GameInstance.h"
+#include "YJ_GameModeBase.h"
+#include "YJ_Item.h"
+#include "YJ_WaitingTicketItem.h"
 
 UYJ_InventoryComponent::UYJ_InventoryComponent()
 {

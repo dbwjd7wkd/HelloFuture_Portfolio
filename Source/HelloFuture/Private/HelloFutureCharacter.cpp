@@ -1,52 +1,48 @@
 ﻿// Copyright Epic Games, Inc. All Rights Reserved.
 
+/** AHelloFutureCharacter
+* 기능: saveGame/LoadGame, 커스텀_서버, 닉네임_서버, 채팅, 나무흔들기, 옷구매, 액자이미지 파일 가져오기, input
+*/
 #include "HelloFutureCharacter.h"
-#include "HeadMountedDisplayFunctionLibrary.h"
+#include "Blueprint/UserWidget.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
+#include "Components/SceneCaptureComponent2D.h"
+#include "Components/SceneComponent.h"
+#include "Components/TextBlock.h"
+#include "Components/TextRenderComponent.h"
+#include "Components/WidgetComponent.h"
+#include "Developer/DesktopPlatform/Public/DesktopPlatformModule.h"
+#include "Developer/DesktopPlatform/Public/IDesktopPlatform.h"
+#include "Engine/NetConnection.h"
+#include "GameFramework/Actor.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
-#include "YJ_Item.h"
-#include "YJ_InventoryComponent.h"
-#include "Minsu_Quiz.h"
-#include <Components/SceneCaptureComponent2D.h>
-#include <Components/SceneComponent.h>
-#include "HelloFutureGameMode.h"
-#include <Minsu_NameInputUserWidget.h>
-#include <Internationalization/Text.h>
-#include "HelloFuture.h"
-#include <Logging/LogMacros.h>
-#include <GameFramework/Actor.h>
-#include <Blueprint/UserWidget.h>
-#include "Minsu_Activate.h"
-#include "Minsu_PlantSeed.h"
-#include <Materials/MaterialInterface.h>
-#include <Minsu_ChatWidget.h>
-#include <YJ_GameInstance.h>
-#include "Engine/NetConnection.h"
-#include "Components/TextRenderComponent.h"
-//File picker includes
-#include "Developer/DesktopPlatform/Public/IDesktopPlatform.h"
-#include "Developer/DesktopPlatform/Public/DesktopPlatformModule.h"
 #include "GenericPlatform/GenericPlatformMisc.h"
-//#include "Runtime/ImageWrapper/Public/Interfaces/IImageWrapper.h"
-//#include "Runtime/ImageWrapper/Public/Interfaces/IImageWrapperModule.h"
+#include "HeadMountedDisplayFunctionLibrary.h"
+#include "HelloFuture.h"
+#include "HelloFutureGameMode.h"
 #include "IImageWrapper.h"
 #include "IImageWrapperModule.h"
-#include "RHICommandList.h"
-#include "Blueprint/UserWidget.h"
+#include "Internationalization/Text.h"
+#include "Logging/LogMacros.h"
+#include "Materials/MaterialInterface.h"
+#include "Minsu_Activate.h"
+#include "Minsu_ChatWidget.h"
+#include "Minsu_NameInputUserWidget.h"
+#include "Minsu_PlantSeed.h"
+#include "Minsu_Quiz.h"
 #include "MyTalkWidget.h"
-#include "Runtime/Engine/Public/TextureResource.h"
-#include "Runtime/Engine/Public/HighResScreenshot.h"
+#include "RHICommandList.h"
 #include "Runtime/Engine/Classes/Engine/Texture2D.h"
-#include "Components/WidgetComponent.h"
-#include "Components/TextBlock.h"
-
-//////////////////////////////////////////////////////////////////////////
-// AHelloFutureCharacter
-// 기능: saveGame/LoadGame, 커스텀_서버, 닉네임_서버, 채팅, 나무흔들기, 옷구매, 액자이미지 파일 가져오기, input
+#include "Runtime/Engine/Public/HighResScreenshot.h"
+#include "Runtime/Engine/Public/TextureResource.h"
+#include "YJ_GameInstance.h"
+#include "YJ_InventoryComponent.h"
+#include "YJ_Item.h"
+#include "YJ_SaveGame.h" // save game
 
 struct FUpdateTextureData
 {
@@ -171,17 +167,17 @@ void AHelloFutureCharacter::SaveGame()
 
 	/** 인벤토리**/
 	// items 정보 저장
-	saveGameInstance->itemCnt = inventory->ItemCnt;
+	saveGameInstance->ItemCnt = inventory->ItemCnt;
 
 	for (int32 i = 0; i < inventory->ItemCnt; i++)
 	{
 		int32 idx = inventory->Items[i]->ItemIndex;
-		saveGameInstance->inventoryIdx[idx] = i;
-		saveGameInstance->inventoryCnt[idx] = inventory->Items[i]->Count;
+		saveGameInstance->InventoryIdxArray[idx] = i;
+		saveGameInstance->InventoryCntArray[idx] = inventory->Items[i]->Count;
 	}
 	// 인벤토리 정보들 저장
-	saveGameInstance->accountBalance = inventory->AccountBalance;
-	saveGameInstance->cash = inventory->Cash;
+	saveGameInstance->AccountBalance = inventory->AccountBalance;
+	saveGameInstance->Cash = inventory->Cash;
 	//SaveGameInstance->columnLength = Inventory->columnLength;
 	//SaveGameInstance->rowLength = Inventory->rowLength;
 	//SaveGameInstance->Capacity = Inventory->Capacity;
@@ -189,13 +185,13 @@ void AHelloFutureCharacter::SaveGame()
 	/** 나머지 정보들 **/
 	// 플레이어 이름 저장
 	saveGameInstance->PlayerName = Name;
-	saveGameInstance->time = time;
+	saveGameInstance->Time = time;
 
 	// 구매한 옷
 	saveGameInstance->BoughtClothes = BoughtClothes;
 
 	//// 구매한 옷 순서대로 in 옷장
-	saveGameInstance->closetBoughts = closetBoughts;
+	saveGameInstance->ClosetBoughts = closetBoughts;
 
 	// 은행
 	saveGameInstance->BankBook = inventory->BankBook;
@@ -203,8 +199,8 @@ void AHelloFutureCharacter::SaveGame()
 	saveGameInstance->Tax = inventory->Tax;
 
 	// 시간
-	saveGameInstance->worldTime = gameInstance->worldTime;
-	saveGameInstance->worldTime_Structure = gameInstance->worldTime_Structure;
+	saveGameInstance->WorldTime = gameInstance->worldTime;
+	saveGameInstance->WorldTimeStructure = gameInstance->worldTime_Structure;
 
 	UGameplayStatics::SaveGameToSlot(saveGameInstance, saveGameInstance->SaveSlotName, saveGameInstance->UserIndex);
 
@@ -220,7 +216,7 @@ void AHelloFutureCharacter::LoadGame()
 	if (!loadGameInstance || !inventory || !gameInstance) return;
 
 	// 아이템 갯수 정보 로드
-	int32 itemCnt = loadGameInstance->itemCnt;
+	int32 itemCnt = loadGameInstance->ItemCnt;
 	inventory->ItemCnt = itemCnt;
 	inventory->Items.SetNum(itemCnt);
 
@@ -229,17 +225,17 @@ void AHelloFutureCharacter::LoadGame()
 	{
 		gameInstance->allItems[i]->ItemIndex = i;
 		// 아이템 갯수가 늘어났을 경우 오류 대비
-		if (loadGameInstance->inventoryCnt.Num() < i + 1)
+		if (loadGameInstance->InventoryCntArray.Num() < i + 1)
 		{
-			loadGameInstance->inventoryCnt.Add(0);
-			loadGameInstance->inventoryIdx.Add(-1);
+			loadGameInstance->InventoryCntArray.Add(0);
+			loadGameInstance->InventoryIdxArray.Add(-1);
 		}
 		// 현재 아이템을 가지고 있지 않으면 건너뛰기
-		int32 cnt = loadGameInstance->inventoryCnt[i];
+		int32 cnt = loadGameInstance->InventoryCntArray[i];
 		if (cnt <= 0) 
 			continue;
 
-		int32 idx = loadGameInstance->inventoryIdx[i];
+		int32 idx = loadGameInstance->InventoryIdxArray[i];
 		// 인벤토리에 현재 아이템 객체 넣기
 		inventory->Items[idx] = gameInstance->allItems[i];
 		// 아이템 객체에 정보 넣기
@@ -251,16 +247,16 @@ void AHelloFutureCharacter::LoadGame()
 	inventory->OnInventoryUpdated.Broadcast();
 
 	// 나머지 인벤토리 정보 로드
-	inventory->AccountBalance = loadGameInstance->accountBalance;
-	inventory->Cash = loadGameInstance->cash;
+	inventory->AccountBalance = loadGameInstance->AccountBalance;
+	inventory->Cash = loadGameInstance->Cash;
 
 	// 플레이어 이름 로드
 	Name = loadGameInstance->PlayerName;
-	time = loadGameInstance->time;
+	time = loadGameInstance->Time;
 
 	//구매한 옷 로드
 	BoughtClothes = loadGameInstance->BoughtClothes;
-	closetBoughts = loadGameInstance->closetBoughts;
+	closetBoughts = loadGameInstance->ClosetBoughts;
 
 	// 은행
 	inventory->BankBook = loadGameInstance->BankBook;
@@ -268,8 +264,8 @@ void AHelloFutureCharacter::LoadGame()
 	inventory->Tax = loadGameInstance->Tax;
 
 	// 시간
-	gameInstance->worldTime = loadGameInstance->worldTime;
-	gameInstance->worldTime_Structure = loadGameInstance->worldTime_Structure;
+	gameInstance->worldTime = loadGameInstance->WorldTime;
+	gameInstance->worldTime_Structure = loadGameInstance->WorldTimeStructure;
 
 	OnLoadGame.Broadcast();
 

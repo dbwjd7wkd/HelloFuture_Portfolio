@@ -2,8 +2,8 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
 #include "YJ_Item.h"
+#include "CoreMinimal.h"
 #include "YJ_WaitingTicketItem.generated.h"
 
 UCLASS()

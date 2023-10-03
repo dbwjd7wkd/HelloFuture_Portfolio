@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include "Blueprint/UserWidget.h"
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "YJ_ATM.generated.h"
@@ -46,12 +45,12 @@ public:
 	// @Warning 블루프린트에서 ATM UI 클래스레퍼런스를 넣어줘야 함.
 	// "WidgetBlueprint'/Game/YJ/UI/ATM/WBP_ATM'"
 	UPROPERTY(EditDefaultsOnly, Category = "ATM")
-		TSubclassOf<UUserWidget> ATMWidgetClass;
+		TSubclassOf<class UUserWidget> ATMWidgetClass;
 
 private:
 	// ATM UI 인스턴스
 	UPROPERTY(VisibleAnywhere)
-		UUserWidget* ATMWidget;
+		class UUserWidget* ATMWidget;
 
 	// 오버랩 된 플레이어
 	UPROPERTY(VisibleAnywhere)
