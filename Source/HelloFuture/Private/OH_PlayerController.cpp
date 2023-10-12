@@ -81,13 +81,6 @@ void AOH_PlayerController::BeginPlay()
 
 	}
 
-}
-
-
-void AOH_PlayerController::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
 	if (IntroDialogue != nullptr && oh_QuestUI != nullptr)
 	{
 		if (isPlaying == true)
@@ -97,9 +90,6 @@ void AOH_PlayerController::Tick(float DeltaTime)
 			oh_QuestUI->InitializeDialogue(IntroDialogue);
 
 			oh_QuestUI->OnDialogueCompleted.AddDynamic(this, &AOH_PlayerController::OnintroDialogueCompleted);
-
-
-
 		}
 
 		else if (isfirstFarm == true)
@@ -156,6 +146,15 @@ void AOH_PlayerController::Tick(float DeltaTime)
 			oh_QuestUI->OnDialogueCompleted.AddDynamic(this, &AOH_PlayerController::OnintroDialogueCompleted);
 		}
 	}
+
+}
+
+
+void AOH_PlayerController::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+
 
 }
 

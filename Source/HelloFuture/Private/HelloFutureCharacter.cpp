@@ -55,48 +55,68 @@ struct FUpdateTextureData
 
 AHelloFutureCharacter::AHelloFutureCharacter()
 {
-	// Set size for collision capsule
+	// 캡슐콜리전 컴포넌트 생성 및 셋팅
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
+	GetCapsuleComponent()->SetCollisionProfileName(TEXT("YJ_HelloFutureCharacter_Capsule"));
 
-	// set our turn rates for input
+	// 메시 컴포넌트 생성 및 셋팅
+	USkeletalMeshComponent* MeshComponenet = GetMesh();
+	MeshComponenet->SetCollisionProfileName(TEXT("YJ_HelloFutureCharacter_Mesh"));
+
+	static auto SkeletalMeshName = TEXT("SkeletalMesh'/Game/GH/Assets/RealMeshs/Body/T-Poser.T-Poser'");
+	static auto SkeletalMeshFinder = ConstructorHelpers::FObjectFinder<USkeletalMesh>(SkeletalMeshName);
+	if (SkeletalMeshFinder.Succeeded())
+	{
+		MeshComponenet->SetSkeletalMesh(SkeletalMeshFinder.Object);
+	}
+
+	static auto AnimBlueprintName = TEXT("AnimBlueprint'/Game/Map/Animation/REALMain_ABP.REALMain_ABP_C'");
+	static auto AnimBlueprintFinder = ConstructorHelpers::FClassFinder<UAnimInstance>(AnimBlueprintName);
+	if (AnimBlueprintFinder.Succeeded())
+	{
+		GetMesh()->SetAnimInstanceClass(AnimBlueprintFinder.Class);
+	}
+	
+	// camera boom 생성 및 셋팅 (콜리전에 부딪히면 플레이어쪽으로 카메라 당겨짐)
+	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
+	CameraBoom->SetupAttachment(RootComponent);
+	CameraBoom->TargetArmLength = 667.921143f; // 카메라가 이 거리만큼 뒤에서 캐릭터를 따라다님.	
+	CameraBoom->bUsePawnControlRotation = true; // 컨트롤러 기준으로 암을 회전시킴.
+	CameraBoom->ProbeSize = 1.0f;
+
+	// follow camera 생성 및 셋팅
+	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
+	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // 붐 끝에 카메라를 부착하고 붐이 컨트롤러 방향에 맞게 조정되도록 함.
+	FollowCamera->bUsePawnControlRotation = false; // 카메라가 암에 대해 회전하지 않음.
+
+	// turn rates for input 셋팅
 	BaseTurnRate = 45.f;
 	BaseLookUpRate = 45.f;
 
-	// Don't rotate when the controller rotates. Let that just affect the camera.
+	// 컨트롤로 회전 셋팅. 컨트롤러 회전할 때 회전하지 않기
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
 
-	// Configure character movement
+	// character movement 셋팅
 	GetCharacterMovement()->bOrientRotationToMovement = true; // Character moves in the direction of input...	
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 540.0f, 0.0f); // ...at this rotation rate
 	GetCharacterMovement()->JumpZVelocity = 600.f;
 	GetCharacterMovement()->AirControl = 0.2f;
 
-	// Create a camera boom (pulls in towards the player if there is a collision)
-	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
-	CameraBoom->SetupAttachment(RootComponent);
-	CameraBoom->TargetArmLength = 300.0f; // The camera follows at this distance behind the character	
-	CameraBoom->bUsePawnControlRotation = true; // Rotate the arm based on the controller
-
-	// Create a follow camera
-	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
-	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
-	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
-
-	// 인벤토리 시스템
+	// 인벤토리 시스템 생성
 	inventory = CreateDefaultSubobject<UYJ_InventoryComponent>(TEXT("Inventory"));
 
-	// 채팅 시스템
+	// 채팅 시스템 생성 및 셋팅
 	ChatText = CreateDefaultSubobject<UTextRenderComponent>("ChatText");
 	ChatText->SetRelativeLocation(FVector(0, 0, 100));
 	ChatText->SetHorizontalAlignment(EHTA_Center);
 	ChatText->SetupAttachment(RootComponent);
 	ChatText->SetVerticalAlignment(EVRTA_TextCenter);
 	ChatText->SetTextRenderColor(FColor::Black);
-	ChatText->SetText(TEXT(""));
+	ChatText->SetText(FText::FromString(TEXT("")));
 	
-	ConstructorHelpers::FObjectFinder<UMaterial> MatFinder(TEXT("Material'/Game/Minsu/Font/Font01/Minsu_TextMat.Minsu_TextMat'"));
+	ConstructorHelpers::FObjectFinder<UMaterial> MatFinder(TEXT("Material'/Game/Minsu/Font/Font03/Minsu_TextMat03.Minsu_TextMat03'"));
 	if (MatFinder.Succeeded())
 	{
 		ChatText->SetTextMaterial(MatFinder.Object);
@@ -108,7 +128,7 @@ AHelloFutureCharacter::AHelloFutureCharacter()
 		ChatText->SetFont(FontFinder.Object);
 	}
 
-	// 옷 구매 TMap
+	// 옷 구매 TMap 셋팅
 	BoughtClothes.Add("ShopClothes1", false);
 	BoughtClothes.Add("ShopClothes2", false);
 	BoughtClothes.Add("ShopClothes3", false);
@@ -117,23 +137,26 @@ AHelloFutureCharacter::AHelloFutureCharacter()
 	BoughtClothes.Add("ShopClothes6", false);
 	BoughtClothes.Add("ShopClothes7", false);
 
-	// 닉네임
-	C_TextRenderName = CreateDefaultSubobject<UTextRenderComponent>(TEXT("C_TextRenderName"));
-	C_TextRenderName->SetRelativeLocation(FVector(17, 0, 52));
-	C_TextRenderName->SetHorizontalAlignment(EHTA_Center);
-	C_TextRenderName->SetupAttachment(RootComponent);
-	C_TextRenderName->SetVerticalAlignment(EVRTA_TextCenter);
-	C_TextRenderName->SetTextRenderColor(FColor::Black);
-	C_TextRenderName->SetText(TEXT(""));
+	// 닉네임 생성 및 셋팅
+	NameTextRender = CreateDefaultSubobject<UTextRenderComponent>(TEXT("NameTextRender"));
+	NameTextRender->SetupAttachment(RootComponent);
+	NameTextRender->SetRelativeLocation(FVector(0.0f, 0.0f, 73.834061f));
+	NameTextRender->SetText(FText::FromString(TEXT("헬로퓨쳐")));
+	NameTextRender->SetHorizontalAlignment(EHTA_Center);
+	NameTextRender->SetVerticalAlignment(EVRTA_TextCenter);
+	NameTextRender->SetTextRenderColor(FColor::White);
+	NameTextRender->SetWorldSize(36.0f);
 
 	if (MatFinder.Succeeded())
 	{
-		C_TextRenderName->SetTextMaterial(MatFinder.Object);
+		NameTextRender->SetTextMaterial(MatFinder.Object);
 	}
 	if (FontFinder.Succeeded())
 	{
-		C_TextRenderName->SetFont(FontFinder.Object);
+		NameTextRender->SetFont(FontFinder.Object);
 	}
+
+	SetReplicates(true);
 
 	//닉네임 수정
 	// name = CreateDefaultSubobject<UWidgetComponent>(TEXT("name"));
@@ -297,86 +320,86 @@ bool AHelloFutureCharacter::GetCustom_OnClient_Validate(const FString& OldName)
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // 닉네임_서버
-void AHelloFutureCharacter::AttemptToSendName(const FString& Message, const FString& OldName)
+void AHelloFutureCharacter::SetName(const FText& PlayerName)
 {
-	// 만약 서버가 없다면 ServerSendName를 보내고
-	// 아니라면, SendName를 이용
-	if (GetLocalRole() < ROLE_Authority)
+	// GetNetMode() <= ENetMode::NM_ListenServer || GetNetMode() == ENetMode::NM_Client => standAlone, 데디케이티드서버, 리슨서버, 서버모드의 클라이언트 중에 어떤 것인지 알 수 있음.
+	// IsLocallyControlled() == true
+	// GetRemoteRole() == ROLE_AutonomousProxy // 객체가 자신을 나타내는 클라이언트 역할을 수행하는 경우
+	// HasAuthority() == true 와 GetLocalRole() == ROLE_Authority 같음.
+	// 
+	// 서버일 때
+
+	if (GetLocalRole() == ROLE_Authority)
 	{
-		// 클라이언트일 때
-		ServerSendName(Message);
-		GetCustom_OnServer(OldName);
+		//MulticastSetName(PlayerName);
+		Name = PlayerName;
+		OnRep_Name();
 	}
-	else
+	// 클라이언트일 때
+	else // 현재 캐릭터 소유의 클라이언트 머신일 때
 	{
-		// 서버일 때
-		SendName(Message);
-		BP_GetCustom(OldName);
+		ServerSetName(PlayerName);
 	}
+
 }
 
-void AHelloFutureCharacter::SendName(const FString& Message)
+void AHelloFutureCharacter::ServerSetName_Implementation(const FText& PlayerName)
 {
-	CurrentName = Message;
-	UpdateNameText();
-	//c->CallFunctionByNameWithArguments(TEXT("Get Custom on Server"), ar, NULL, true);
+	SetName(PlayerName);
 }
 
-void AHelloFutureCharacter::ServerSendName_Implementation(const FString& Message)
+bool AHelloFutureCharacter::ServerSetName_Validate(const FText& PlayerName)
 {
-	SendName(Message);
-	ClientSendName(Message);
-}
-
-bool AHelloFutureCharacter::ServerSendName_Validate(const FString& Message)
-{
-	if (Message.Len() < 255)
+	if (PlayerName.ToString().Len() < 255)
 	{
 		return true;
 	}
 	else return false;
 }
 
-void AHelloFutureCharacter::ClientSendName_Implementation(const FString& Message)
+void AHelloFutureCharacter::MulticastSetName_Implementation(const FText& PlayerName)
 {
-	SendName(Message);
+	Name = PlayerName;
+	OnRep_Name();
 }
 
-bool AHelloFutureCharacter::ClientSendName_Validate(const FString& Message)
+bool AHelloFutureCharacter::MulticastSetName_Validate(const FText& PlayerName)
 {
-	if (Message.Len() < 255)
+	if (PlayerName.ToString().Len() < 255)
 	{
 		return true;
 	}
 	else return false;
 }
 
-void AHelloFutureCharacter::OnRep_CurrentName()
+void AHelloFutureCharacter::OnRep_Name()
 {
-	UpdateNameText();
+	UpdateNameTextRender();
 }
 
-void AHelloFutureCharacter::UpdateNameText()
+void AHelloFutureCharacter::UpdateNameTextRender()
 {
-	C_TextRenderName->SetText(CurrentName);
+	NameTextRender->SetText(Name);
+	PrintDebug(TEXT("d"));
 }
 
+void AHelloFutureCharacter::PrintDebug(const FString& str)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, FString::Printf(TEXT("%s: %s"), *str, *Name.ToString()));
+}
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////
-// 채팅
 void AHelloFutureCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AHelloFutureCharacter, CurrentMessage);
 	DOREPLIFETIME(AHelloFutureCharacter, CurrentName);
-	//DOREPLIFETIME(AHelloFutureCharacter, Name);
+	DOREPLIFETIME(AHelloFutureCharacter, Name);
 
 }
 
 void AHelloFutureCharacter::AttemptToSendChatMessage(const FString& Message)
 {
-
 	// 만약 서버가 없다면 ServersendChat message를 보내고
 	// 아니라면, send chat message를 이용
 	if (GetLocalRole() < ROLE_Authority)
@@ -506,8 +529,6 @@ void AHelloFutureCharacter::OpenFileDialog(int32 frameNumber, const FString& Dia
 
 UTexture2D* AHelloFutureCharacter::GetFile(const FString& File, bool& IsValid, int32& Width, int32& Height)
 {
-
-	UE_LOG(LogTemp, Warning, TEXT("okay"));
 	IsValid = false;
 
 	// 텍스처를 넣을 자리 지정
@@ -520,11 +541,10 @@ UTexture2D* AHelloFutureCharacter::GetFile(const FString& File, bool& IsValid, i
 	
 	//EImageFormkat DetectedFormat = ImageWrapperModule.DetectImageFormat(ImageRawData.GetData(), ImageRawData.Num());
 
-	IImageWrapperPtr ImageWrapper = ImageWrapperModule.CreateImageWrapper(EImageFormat::JPEG);
+	TSharedPtr<IImageWrapper> ImageWrapper = ImageWrapperModule.CreateImageWrapper(EImageFormat::JPEG);
 
 	if (!FFileHelper::LoadFileToArray(ImageRawData, *File))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("NULLNULL"));
 		return NULL;
 	}
 
@@ -532,16 +552,12 @@ UTexture2D* AHelloFutureCharacter::GetFile(const FString& File, bool& IsValid, i
 	{
 		TArray<uint8> UncompressedBGRA;
 
-		UE_LOG(LogTemp, Warning, TEXT("what?"));
-
 		if (ImageWrapper->GetRaw(ERGBFormat::BGRA, 8, UncompressedBGRA))
 		{
-			UE_LOG(LogTemp, Warning, TEXT("came here?"));
 			Texture = UTexture2D::CreateTransient(ImageWrapper->GetWidth(), ImageWrapper->GetHeight(), PF_B8G8R8A8);
 
 			if (!Texture)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("INValidTexture"));
 				return NULL;
 			}
 
@@ -559,19 +575,6 @@ UTexture2D* AHelloFutureCharacter::GetFile(const FString& File, bool& IsValid, i
 	IsValid = true;
 	return Texture;
 }
-
-//void AHelloFutureCharacter::PrintData(const FString& File)
-//{
-//	//Parse the data into a string array
-//	TArray<FString> LoadedText;
-//	FFileHelper::LoadFileToStringArray(LoadedText, *File);
-//	//Print the contents
-//	for (int32 i = 0; i < LoadedText.Num(); i++)
-//	{
-//		GLog->Log(LoadedText[i]);
-//	}
-//}
-
 
 //////////////////////////////////////////////////////////////////////////
 // Input
@@ -606,18 +609,6 @@ void AHelloFutureCharacter::SetupPlayerInputComponent(class UInputComponent* Pla
 	// save game
 	PlayerInputComponent->BindAction("Save", IE_Pressed, this, &AHelloFutureCharacter::SaveGame);
 	PlayerInputComponent->BindAction("Load", IE_Pressed, this, &AHelloFutureCharacter::LoadGame);
-}
-
-void AHelloFutureCharacter::CreatePlayerHUD(FText playerName)
-{
-	if (nameWidgetClass)
-	{
-		nameWidget = CreateWidget<UMinsu_NameInputUserWidget>(GetWorld(), nameWidgetClass);
-		if (nameWidget)
-		{
-			nameWidget->AddToViewport();
-		}
-	}
 }
 
 void AHelloFutureCharacter::OnResetVR()
@@ -686,24 +677,13 @@ void AHelloFutureCharacter::SetInteractiveInRange(class AOH_InteractiveBase* Int
 {
 	if (Interactive != nullptr)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("WWWw"));
 		currentInteractive = Interactive;
-		
-		
 	}
 }
 
 void AHelloFutureCharacter::ClearInteractiveInRange(class AOH_InteractiveBase* Interactive)
 {
-	UE_LOG(LogTemp, Warning, TEXT("WWWww"));
 	currentInteractive = nullptr;
-	
-}
-
-////////////////////////////////////////////////
-void AHelloFutureCharacter::InitializeGame()
-{
-
 }
 
 void AHelloFutureCharacter::Chatting()

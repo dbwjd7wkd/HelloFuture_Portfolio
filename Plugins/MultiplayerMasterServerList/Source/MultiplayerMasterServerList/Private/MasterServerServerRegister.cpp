@@ -1,5 +1,6 @@
 // Multiplayer Master Server Plugin Copyright (C) 2020 MeoPlay <contact@meoplay.com> All Rights Reserved.
 
+#pragma warning(disable:4996)
 
 #include "MasterServerServerRegister.h"
 #include "Net/UnrealNetwork.h"
