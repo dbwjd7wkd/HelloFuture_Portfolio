@@ -60,25 +60,30 @@ public:
 
 	/** 닉네임_서버동기화 */
 public:
-	// 닉네임 보내기 (서버에 있을때만 실행 가능), 서버에 없다면 ServerSendName 실행
+	// 닉네임 설정 (클라이언트일 때는 서버에 값을 보내서 실행함)
 	UFUNCTION(BlueprintCallable, Category = "Name")
-		void SetName(const FText& PlayerName);
+		void AttempToSetName(const FText& PlayerName);
+	// 현재 머신이 서버라면 그대로 실행하고, 
+	// 클라이언트라면 서버로 값을 보내 서버에서 실행함.
 	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable, Category = "Name")
 		void ServerSetName(const FText& PlayerName);
 		void ServerSetName_Implementation(const FText& PlayerName);
 		bool ServerSetName_Validate(const FText& PlayerName);
+	// 서버에서 호출하여 서버포함 모든클라이언트에서 실행.
 	UFUNCTION(NetMulticast, Reliable, WithValidation, BlueprintCallable, Category = "Name")
 		void MulticastSetName(const FText& PlayerName);
 		void MulticastSetName_Implementation(const FText& PlayerName);
 		bool MulticastSetName_Validate(const FText& PlayerName);
+	UFUNCTION(Category = "Name")
+		void SetName(const FText& PlayerName);
 	UFUNCTION(BlueprintCallable, Category = "Name")
 		void OnRep_Name();
 	UFUNCTION(BlueprintCallable, Category = "Name")
 		void UpdateNameTextRender();
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Transient, Replicated, Category = "Name")
-		FString CurrentName; // 현재 안 쓰이고 블프 변수가 대체하고 있는데, 바꾸기.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Transient, ReplicatedUsing=OnRep_Name, Category = "Name")
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, 
+		ReplicatedUsing = OnRep_Name, Transient, Category = "Name")
 		FText Name;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Name")
 		class UTextRenderComponent* NameTextRender;

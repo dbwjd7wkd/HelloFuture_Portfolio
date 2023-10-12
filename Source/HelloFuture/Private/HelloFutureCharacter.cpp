@@ -320,32 +320,16 @@ bool AHelloFutureCharacter::GetCustom_OnClient_Validate(const FString& OldName)
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // 닉네임_서버
-void AHelloFutureCharacter::SetName(const FText& PlayerName)
+
+void AHelloFutureCharacter::AttempToSetName(const FText& PlayerName)
 {
-	// GetNetMode() <= ENetMode::NM_ListenServer || GetNetMode() == ENetMode::NM_Client => standAlone, 데디케이티드서버, 리슨서버, 서버모드의 클라이언트 중에 어떤 것인지 알 수 있음.
-	// IsLocallyControlled() == true
-	// GetRemoteRole() == ROLE_AutonomousProxy // 객체가 자신을 나타내는 클라이언트 역할을 수행하는 경우
-	// HasAuthority() == true 와 GetLocalRole() == ROLE_Authority 같음.
-	// 
-	// 서버일 때
-
-	if (GetLocalRole() == ROLE_Authority)
-	{
-		//MulticastSetName(PlayerName);
-		Name = PlayerName;
-		OnRep_Name();
-	}
-	// 클라이언트일 때
-	else // 현재 캐릭터 소유의 클라이언트 머신일 때
-	{
-		ServerSetName(PlayerName);
-	}
-
+	ServerSetName(PlayerName);
 }
 
-void AHelloFutureCharacter::ServerSetName_Implementation(const FText& PlayerName)
+void AHelloFutureCharacter::ServerSetName_Implementation
+(const FText& PlayerName)
 {
-	SetName(PlayerName);
+	MulticastSetName(PlayerName);
 }
 
 bool AHelloFutureCharacter::ServerSetName_Validate(const FText& PlayerName)
@@ -359,8 +343,7 @@ bool AHelloFutureCharacter::ServerSetName_Validate(const FText& PlayerName)
 
 void AHelloFutureCharacter::MulticastSetName_Implementation(const FText& PlayerName)
 {
-	Name = PlayerName;
-	OnRep_Name();
+	SetName(PlayerName);
 }
 
 bool AHelloFutureCharacter::MulticastSetName_Validate(const FText& PlayerName)
@@ -372,15 +355,20 @@ bool AHelloFutureCharacter::MulticastSetName_Validate(const FText& PlayerName)
 	else return false;
 }
 
+void AHelloFutureCharacter::SetName(const FText& PlayerName)
+{
+	Name = PlayerName;
+	OnRep_Name();
+}
+
 void AHelloFutureCharacter::OnRep_Name()
 {
-	UpdateNameTextRender();
+	NameTextRender->SetText(Name);
 }
 
 void AHelloFutureCharacter::UpdateNameTextRender()
 {
 	NameTextRender->SetText(Name);
-	PrintDebug(TEXT("d"));
 }
 
 void AHelloFutureCharacter::PrintDebug(const FString& str)
@@ -393,7 +381,6 @@ void AHelloFutureCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AHelloFutureCharacter, CurrentMessage);
-	DOREPLIFETIME(AHelloFutureCharacter, CurrentName);
 	DOREPLIFETIME(AHelloFutureCharacter, Name);
 
 }
