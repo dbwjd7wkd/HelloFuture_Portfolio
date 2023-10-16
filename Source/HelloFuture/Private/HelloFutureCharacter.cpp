@@ -156,7 +156,7 @@ AHelloFutureCharacter::AHelloFutureCharacter()
 		NameTextRender->SetFont(FontFinder.Object);
 	}
 
-	SetReplicates(true);
+	bReplicates = true;
 
 	//닉네임 수정
 	// name = CreateDefaultSubobject<UWidgetComponent>(TEXT("name"));
@@ -323,16 +323,71 @@ bool AHelloFutureCharacter::GetCustom_OnClient_Validate(const FString& OldName)
 
 void AHelloFutureCharacter::AttempToSetName(const FText& PlayerName)
 {
-	ServerSetName(PlayerName);
+	//ServerSetName(PlayerName);
+	//if (!HasAuthority() && IsLocallyControlled())
+	UE_LOG(LogTemp, Warning, TEXT("=================AttempToSetName start================================"));
+	UE_LOG(LogTemp, Warning, TEXT("로컬인지 %s 서버인지 %s"), IsLocallyControlled() ? TEXT("yes") : TEXT("no"), HasAuthority() ? TEXT("yes") : TEXT("no"));
+	UE_LOG(LogTemp, Warning, TEXT("var PlayerName %s"), *PlayerName.ToString());
+	UE_LOG(LogTemp, Warning, TEXT("CurrentName %s"), *Name.ToString());
+
+	int idx = 0;
+	for (auto player : GetGameInstance()->GetWorld()->GetGameState()->PlayerArray)
+	{
+		auto owingPlayer = Cast<AHelloFutureCharacter>(player->GetOwner());
+		FText curName = FText::FromString(TEXT("없음"));
+
+		if (owingPlayer)
+		{
+			curName = owingPlayer->Name;
+		}
+		UE_LOG(LogTemp, Warning, TEXT(":::::::::::::::::%d번째 PlayerID : %s, Name: %s"), idx++, *player->GetName(), *curName.ToString());
+	}
+
+	/*if(HasAuthority())
+	{
+		SetName(PlayerName);
+	}*/
+	if (!HasAuthority())
+	{
+		ServerSetName(PlayerName);
+	}
+
+	idx = 0;
+	for (auto player : GetGameInstance()->GetWorld()->GetGameState()->PlayerArray)
+	{
+		auto owingPlayer = Cast<AHelloFutureCharacter>(player->GetOwner());
+		FText curName = FText::FromString(TEXT("없음"));
+
+		if (owingPlayer)
+		{
+			curName = owingPlayer->Name;
+		}
+		UE_LOG(LogTemp, Warning, TEXT(":::::::::::::::::%d번째 PlayerID : %s, Name: %s"), idx++, *player->GetName(), *curName.ToString());
+	}
+	UE_LOG(LogTemp, Warning, TEXT("CurrentName %s"), *Name.ToString());
+	UE_LOG(LogTemp, Warning, TEXT("=================AttempToSetName end================================"));
+
+
+}
+
+bool AHelloFutureCharacter::ServerSetName_Validate(const FText& PlayerName)
+{
+	if (PlayerName.ToString().Len() < 255)
+	{
+		return true;
+	}
+	else return false;
 }
 
 void AHelloFutureCharacter::ServerSetName_Implementation
 (const FText& PlayerName)
 {
-	MulticastSetName(PlayerName);
+	//MulticastSetName(PlayerName);
+	UE_LOG(LogTemp, Warning, TEXT("ServerSetName 함수 실행"));
+	SetName(PlayerName);
 }
 
-bool AHelloFutureCharacter::ServerSetName_Validate(const FText& PlayerName)
+bool AHelloFutureCharacter::MulticastSetName_Validate(const FText& PlayerName)
 {
 	if (PlayerName.ToString().Len() < 255)
 	{
@@ -346,34 +401,34 @@ void AHelloFutureCharacter::MulticastSetName_Implementation(const FText& PlayerN
 	SetName(PlayerName);
 }
 
-bool AHelloFutureCharacter::MulticastSetName_Validate(const FText& PlayerName)
-{
-	if (PlayerName.ToString().Len() < 255)
-	{
-		return true;
-	}
-	else return false;
-}
-
 void AHelloFutureCharacter::SetName(const FText& PlayerName)
 {
 	Name = PlayerName;
-	OnRep_Name();
+	UpdateNameTextRender();
 }
 
 void AHelloFutureCharacter::OnRep_Name()
 {
+	UE_LOG(LogTemp, Warning, TEXT("OnRep_Name 함수 실행, 플레이어이름: %s"), *Name.ToString());
 	NameTextRender->SetText(Name);
 }
 
 void AHelloFutureCharacter::UpdateNameTextRender()
 {
+	UE_LOG(LogTemp, Warning, TEXT("UpdateNameTextRender 함수 실행, 플레이어이름: %s"), *Name.ToString());
 	NameTextRender->SetText(Name);
 }
 
 void AHelloFutureCharacter::PrintDebug(const FString& str)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, FString::Printf(TEXT("%s: %s"), *str, *Name.ToString()));
+	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, FString::Printf(TEXT("%s: CurName %s"), *str, *Name.ToString()));
+	//if(GetNetOwningPlayer())
+	//	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, FString::Printf(TEXT("%s"), *GetNetOwningPlayer()->GetFName().ToString()));
+	//else
+	//	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, FString::Printf(TEXT("Non-Owning Player!")));
+	if (IsLocallyControlled())
+		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, FString::Printf(TEXT("be locally controlled!")));
+
 }
 
 void AHelloFutureCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

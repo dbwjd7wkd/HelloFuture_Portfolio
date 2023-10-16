@@ -82,8 +82,7 @@ public:
 		void UpdateNameTextRender();
 
 protected:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, 
-		ReplicatedUsing = OnRep_Name, Transient, Category = "Name")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, ReplicatedUsing = OnRep_Name, Transient, Category = "Name")
 		FText Name;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Name")
 		class UTextRenderComponent* NameTextRender;
