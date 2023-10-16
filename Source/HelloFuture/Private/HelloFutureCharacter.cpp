@@ -274,7 +274,8 @@ void AHelloFutureCharacter::LoadGame()
 	inventory->Cash = loadGameInstance->Cash;
 
 	// 플레이어 이름 로드
-	Name = loadGameInstance->PlayerName;
+	/*Name = loadGameInstance->PlayerName;*/
+	AttempToSetName(loadGameInstance->PlayerName);
 	time = loadGameInstance->Time;
 
 	//구매한 옷 로드
@@ -343,13 +344,18 @@ void AHelloFutureCharacter::AttempToSetName(const FText& PlayerName)
 		UE_LOG(LogTemp, Warning, TEXT(":::::::::::::::::%d번째 PlayerID : %s, Name: %s"), idx++, *player->GetName(), *curName.ToString());
 	}
 
-	/*if(HasAuthority())
+	if (IsLocallyControlled())
 	{
-		SetName(PlayerName);
-	}*/
-	if (!HasAuthority())
-	{
-		ServerSetName(PlayerName);
+		if(HasAuthority())
+		{
+			UE_LOG(LogTemp, Warning, TEXT("SetName 함수 호출"));
+			SetName(PlayerName);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("ServerSetName 함수 호출"));
+			ServerSetName(PlayerName);
+		}
 	}
 
 	idx = 0;

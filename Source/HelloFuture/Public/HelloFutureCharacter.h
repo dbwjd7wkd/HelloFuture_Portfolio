@@ -84,6 +84,8 @@ public:
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, ReplicatedUsing = OnRep_Name, Transient, Category = "Name")
 		FText Name;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Transient, Category = "Name")
+		FText SendingName;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Name")
 		class UTextRenderComponent* NameTextRender;
 
