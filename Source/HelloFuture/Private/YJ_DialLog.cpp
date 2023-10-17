@@ -34,7 +34,7 @@ void AYJ_DialLog::BeginPlay()
 
 			if (curPlayerController == nullptr)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("AOH_PlayerController 가져오지 못함!!"));
+				//UE_LOG(LogTemp, Warning, TEXT("AOH_PlayerController 가져오지 못함!!"));
 				return;
 			}
 
@@ -42,7 +42,7 @@ void AYJ_DialLog::BeginPlay()
 		}
 		else
 		{
-			UE_LOG(LogTemp, Warning, TEXT("플레이어 컨트롤러 없음!!"));
+			//UE_LOG(LogTemp, Warning, TEXT("플레이어 컨트롤러 없음!!"));
 			return;
 		}
 	}
@@ -53,11 +53,11 @@ void AYJ_DialLog::BeginPlay()
 	if (curPlayerController != nullptr && Dialogue != nullptr)
 	{
 		//curPlayerController->oh_QuestUI->InitializeDialogue(Dialogue); //InitializeDialogue 함수에서 걸림!!
-		UE_LOG(LogTemp, Warning, TEXT("GOOD!!"));
+		//UE_LOG(LogTemp, Warning, TEXT("GOOD!!"));
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("BAD!!"));
+		//UE_LOG(LogTemp, Warning, TEXT("BAD!!"));
 	}
 
 

@@ -78,7 +78,7 @@ bool UYJ_InventoryComponent::AddItem2(EItemEnum Item)
 
 	// 아이템 가져오기
 	int32 idx = (int32)Item;
-	UYJ_Item* item = gameInstance->allItems[idx];
+	UYJ_Item* item = gameInstance->AllItems[idx];
 
 	// Item이 은행 대기표일 때, Items에 대기표가 있으면 아래 내용 실행하지 않음.
 	UYJ_WaitingTicketItem* waitingTicketItem = Cast<UYJ_WaitingTicketItem>(item);
@@ -138,7 +138,7 @@ bool UYJ_InventoryComponent::AddItemByNumber(EItemEnum Item, int32 Num)
 
 	// 아이템 가져오기
 	int32 idx = (int32)Item;
-	UYJ_Item* item = gameInstance->allItems[idx];
+	UYJ_Item* item = gameInstance->AllItems[idx];
 
 	// Item이 은행 대기표일 때, Items에 대기표가 있으면 아래 내용 실행하지 않음.
 	UYJ_WaitingTicketItem* waitingTicketItem = Cast<UYJ_WaitingTicketItem>(item);
@@ -181,15 +181,17 @@ bool UYJ_InventoryComponent::AddItemByNumber(EItemEnum Item, int32 Num)
 
 	return true;
 }
-
-bool UYJ_InventoryComponent::AddItem3(TSubclassOf<UYJ_Item> ItemClass)
+/*
+bool UYJ_InventoryComponent::AddItem3(TSubclassOf<UYJ_Item> ItemClass, int32 Num)
 {
-	auto Item = ItemClass.GetDefaultObject();
-	// 인벤토리 창이 다 차거나 들어오는 Item 이 유효하지 않으면 아래 내용 실행하지 않음.
-	if (Items.Num() >= Capacity || !Item)
+	// 인벤토리 창이 다 차면 아래 내용 실행하지 않음.
+	if (ItemCnt >= Capacity)
 	{
 		return false;
 	}
+
+	// 아이템 가져오기
+	UYJ_Item* Item = ItemClass.GetDefaultObject();
 
 	// Item이 은행 대기표일 때, Items에 대기표가 있으면 아래 내용 실행하지 않음.
 	UYJ_WaitingTicketItem* waitingTicketItem = Cast<UYJ_WaitingTicketItem>(Item);
@@ -203,22 +205,35 @@ bool UYJ_InventoryComponent::AddItem3(TSubclassOf<UYJ_Item> ItemClass)
 			}
 		}
 
-		UWorld* const World = GetWorld();
-		AYJ_GameModeBase* GameMode;
+		// 게임모드 가져와서, 은행아이템 대기번호 증가시키기.
+		UWorld* World = GetWorld();
+		if (!World) return false;
 		if (World) {
-			GameMode = Cast<AYJ_GameModeBase>(UGameplayStatics::GetGameMode(World));
+			AYJ_GameModeBase* GameMode = Cast<AYJ_GameModeBase>(UGameplayStatics::GetGameMode(World));
+			if (!GameMode) return false;
 			waitingTicketItem->ItemWaitingNumber = GameMode->WaitingNumber + 1;
 		}
 	}
 
-	Item->OwningInventory = this;
-	Item->World = GetWorld();
-	Items.Add(Item);
+	// 아이템 추가하기
+	if(!ItemIndexMap.Contains(ItemClass))
+	{
+		ItemStructArray.Add({ ItemClass, 1 });
+		ItemIndexMap.Add(ItemClass, 1);
+		ItemCnt++;
+	}
+	else
+	{
+		ItemStructArray.Add({ ItemClass, 1 });
+		ItemIndexMap.Add(ItemClass, 1);
+		Item->Count += Num;
+	}
 	// Update UI
 	OnInventoryUpdated.Broadcast();
 
 	return true;
 }
+*/
 
 bool UYJ_InventoryComponent::RemoveItem(UYJ_Item* Item)
 {
@@ -242,7 +257,6 @@ bool UYJ_InventoryComponent::RemoveItem2(EItemEnum Item)
 	// 인벤토리 창이 비면 아래 내용 실행하지 않음.
 	if (ItemCnt <= 0)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("1"));
 		return false;
 	}
 
@@ -254,7 +268,7 @@ bool UYJ_InventoryComponent::RemoveItem2(EItemEnum Item)
 
 	// 아이템 가져오기
 	int32 idx = (int32)Item;
-	UYJ_Item* item = gameInstance->allItems[idx];
+	UYJ_Item* item = gameInstance->AllItems[idx];
 
 	// 아이템 지우기
 	if (item->Count <= 1)
@@ -266,13 +280,10 @@ bool UYJ_InventoryComponent::RemoveItem2(EItemEnum Item)
 		item->Count = 0;
 		Items.RemoveSingle(item);
 		ItemCnt--;
-		UE_LOG(LogTemp, Warning, TEXT("Remove Item"));
-		UE_LOG(LogTemp, Warning, TEXT("%d"), Items.Num());
 	}
 	else
 	{
 		item->Count--;
-		UE_LOG(LogTemp, Warning, TEXT("Minus item count"));
 	}
 
 	// Update UI
@@ -286,7 +297,6 @@ bool UYJ_InventoryComponent::RemoveItemByNumber(EItemEnum Item, int32 Num)
 	// 인벤토리 창이 비면 아래 내용 실행하지 않음.
 	if (ItemCnt <= 0)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("1"));
 		return false;
 	}
 
@@ -298,7 +308,7 @@ bool UYJ_InventoryComponent::RemoveItemByNumber(EItemEnum Item, int32 Num)
 
 	// 아이템 가져오기
 	int32 idx = (int32)Item;
-	UYJ_Item* item = gameInstance->allItems[idx];
+	UYJ_Item* item = gameInstance->AllItems[idx];
 
 	if (item->Count < Num) return false;
 
@@ -314,25 +324,50 @@ bool UYJ_InventoryComponent::RemoveItemByNumber(EItemEnum Item, int32 Num)
 		Items.RemoveSingle(item);
 		//Items.SetNum(Capacity);
 		ItemCnt--;
-		UE_LOG(LogTemp, Warning, TEXT("Remove Item"));
-		UE_LOG(LogTemp, Warning, TEXT("%d"), Items.Num());
 	}
 	else
 	{
 		//Items[item->InventoryIndex]->Count--;
 		item->Count -= Num;
-		UE_LOG(LogTemp, Warning, TEXT("Minus item count"));
 	}
 	OnInventoryUpdated.Broadcast();
 
 	return true;
 }
-
-bool UYJ_InventoryComponent::RemoveItem3(TSubclassOf<UYJ_Item> ItemClass)
+/*
+bool UYJ_InventoryComponent::RemoveItem3(TSubclassOf<UYJ_Item> ItemClass, int32 Num)
 {
-	return false;
-}
+	// 인벤토리 창이 비면 아래 내용 실행하지 않음.
+	if (ItemCnt <= 0)
+	{
+		return false;
+	}
 
+	// 아이템 가져오기
+	UYJ_Item* Item = ItemClass.GetDefaultObject();
+
+	if (Item->Count < Num) return false;
+
+	// 아이템 지우기
+	if (Item->Count - Num <= 0)
+	{
+		Item->OwningInventory = nullptr;
+		Item->Count = 0;
+		//Items[ItemCnt] = nullptr;
+		Items.RemoveSingle(Item);
+		//Items.SetNum(Capacity);
+		ItemCnt--;
+	}
+	else
+	{
+		//Items[item->InventoryIndex]->Count--;
+		Item->Count -= Num;
+	}
+	OnInventoryUpdated.Broadcast();
+
+	return true;
+}
+*/
 UYJ_Item* UYJ_InventoryComponent::EnumIndexToItem(EItemEnum Item)
 {
 	UWorld* world = GetWorld();
@@ -341,7 +376,7 @@ UYJ_Item* UYJ_InventoryComponent::EnumIndexToItem(EItemEnum Item)
 	if (!gameInstance) return false;
 
 	int32 idx = (int32)Item;
-	UYJ_Item* item = gameInstance->allItems[idx];
+	UYJ_Item* item = gameInstance->AllItems[idx];
 	if (item)
 	{
 		for (auto itm : Items)

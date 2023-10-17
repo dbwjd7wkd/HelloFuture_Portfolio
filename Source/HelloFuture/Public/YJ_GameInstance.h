@@ -28,7 +28,7 @@ public:
 	// 모든 아이템 인스턴스
 	// @note 플레이 시 모든 아이템들 객체 들어가있음
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Instanced)
-		TArray<class UYJ_Item*> allItems;
+		TArray<class UYJ_Item*> AllItems;
 
 	// ClothingShopMap에서 구매한 옷을 배치할 위치 백터 어레이 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ClosetSpawnLocation")
@@ -36,7 +36,7 @@ public:
 
 	// 시간
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Time")
-		int32 worldTime = 1;
+		int32 WorldTime = 1;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Time")
-		FDateTime worldTime_Structure;
+		FDateTime WorldTimeStructure;
 };

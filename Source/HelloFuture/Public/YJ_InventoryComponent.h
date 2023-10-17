@@ -123,8 +123,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 		bool AddItem2(EItemEnum Item);
 	// 인벤토리에 아이템 추가3
-	UFUNCTION(BlueprintCallable)
-		bool AddItem3(TSubclassOf<class UYJ_Item> ItemClass);
+	//UFUNCTION(BlueprintCallable)
+	//	bool AddItem3(TSubclassOf<class UYJ_Item> ItemClass, int32 Num = 1);
 	// 갯수만큼 인벤토리에 아이템 추가
 	UFUNCTION(BlueprintCallable)
 		bool AddItemByNumber(EItemEnum Item, int32 Num);
@@ -134,9 +134,9 @@ public:
 	// 인벤토리에 아이템 제거2
 	UFUNCTION(BlueprintCallable)
 		bool RemoveItem2(EItemEnum Item);
-	// 인벤토리에 아이템 제거3
-	UFUNCTION(BlueprintCallable)
-		bool RemoveItem3(TSubclassOf<class UYJ_Item> ItemClass);
+	//// 인벤토리에 아이템 제거3
+	//UFUNCTION(BlueprintCallable)
+	//	bool RemoveItem3(TSubclassOf<class UYJ_Item> ItemClass, int32 Num = 1);
 	// 갯수만큼 인벤토리에 아이템 제거
 	UFUNCTION(BlueprintCallable)
 		bool RemoveItemByNumber(EItemEnum Item, int32 Num);
@@ -197,6 +197,24 @@ public:
 	// 현금잔고
 	UPROPERTY(EditDefaultsOnly, blueprintReadWrite, Category = "Inventory")
 		int32 Cash;
+
+	/** 가지고 있는 것들 정보 */
+	/*
+	USTRUCT(Atomic, BlueprintType)
+	struct ItemStruct
+	{
+		// 아이템 클래스
+		UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "BankBook")
+			TSubclassOf<class UYJ_Item> ItemClass;
+		// 아이템 갯수
+		UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Items")
+			int32 ItemNumber;
+	};
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Items")
+		TArray<ItemStruct> ItemStructArray;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Items")
+		TMap<TSubclassOf<class UYJ_Item>, int32> ItemIndexMap;
+	*/
 
 	/** 통장, 대출, 세금 이자에 관한 정보 */
 	// 통장

@@ -38,13 +38,13 @@ struct FcloseBoughtMStruct
 public:
     // 옷 스켈레탈 메시
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ClosetBought")
-        USkeletalMesh* closetBoughtMesh;
+        USkeletalMesh* ClosetBoughtMesh;
     // 옷 머티리얼
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ClosetBought")
-        TArray<UMaterialInterface*> closetBoughtMaterial;
+        TArray<UMaterialInterface*> ClosetBoughtMaterial;
     // 옷 카테고리
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ClosetBought")
-       EClosetBoughtCategory closetBoughtCategory;
+       EClosetBoughtCategory ClosetBoughtCategory;
 };
 
 UCLASS()
@@ -103,6 +103,9 @@ public:
     // 인벤토리의 각 아이템 갯수
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Inventory")
         TArray<int32> InventoryCntArray;
+
+    //UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Inventory")
+    //    TArray<TSubclassOf<class UYJ_Item>> Items;
     // 삭제 예정
     //UPROPERTY(VisibleAnywhere, Category = "Inventory")
     //    TArray<class UYJ_Item*> Items;

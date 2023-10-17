@@ -23,7 +23,7 @@ public:
 	AHelloFutureCharacter();
 	virtual void BeginPlay() override;
 
-	/** Replicated 할 속성값 등록 */
+	/** Replicated Property 등록 */
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	
 	/** save game */
@@ -34,11 +34,11 @@ public:
 		void LoadGame();
 
 	UPROPERTY(BlueprintReadOnly, Category = "SaveGame")
-		class UYJ_SaveGame* saveGameInstance;
+		class UYJ_SaveGame* SaveGameInstance;
 	UPROPERTY(BlueprintReadOnly, Category = "SaveGame")
-		class UYJ_SaveGame* loadGameInstance;
+		class UYJ_SaveGame* LoadGameInstance;
 	UPROPERTY(BlueprintReadOnly)
-		class UYJ_GameInstance* gameInstance;
+		class UYJ_GameInstance* GameInstance;
 	UPROPERTY(BlueprintAssignable, Category = "SaveGame")
 		FSaveGameDelegate OnSaveGame;
 	UPROPERTY(BlueprintAssignable, Category = "SaveGame")
@@ -48,7 +48,6 @@ public:
 public:
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Custom")
 		void BP_GetCustom(const FString& OldName);
-
 	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable, Category = "Custom")
 		void GetCustom_OnServer(const FString& OldName);
 		void GetCustom_OnServer_Implementation(const FString& OldName);
@@ -61,19 +60,14 @@ public:
 	/** 닉네임_서버동기화 */
 public:
 	// 닉네임 설정 (클라이언트일 때는 서버에 값을 보내서 실행함)
+	// @Warning 빠른 시간안에 또 불리면 Replicated가 안 되므로, 연속으로 호출 금지. 연속으로 부르고 싶으면 Replicated 옵션대신 RPC Multicast를 추가로 사용해야 함.
 	UFUNCTION(BlueprintCallable, Category = "Name")
 		void AttempToSetName(const FText& PlayerName);
-	// 현재 머신이 서버라면 그대로 실행하고, 
-	// 클라이언트라면 서버로 값을 보내 서버에서 실행함.
+	// 호출 머신이 클라이언트라면 서버로 값을 보내 서버에서 실행함. (호출 머신이 서버라면 그대로 서버에서 실행.)
 	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable, Category = "Name")
 		void ServerSetName(const FText& PlayerName);
 		void ServerSetName_Implementation(const FText& PlayerName);
 		bool ServerSetName_Validate(const FText& PlayerName);
-	// 서버에서 호출하여 서버포함 모든클라이언트에서 실행.
-	UFUNCTION(NetMulticast, Reliable, WithValidation, BlueprintCallable, Category = "Name")
-		void MulticastSetName(const FText& PlayerName);
-		void MulticastSetName_Implementation(const FText& PlayerName);
-		bool MulticastSetName_Validate(const FText& PlayerName);
 	UFUNCTION(Category = "Name")
 		void SetName(const FText& PlayerName);
 	UFUNCTION(BlueprintCallable, Category = "Name")
@@ -81,20 +75,22 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Name")
 		void UpdateNameTextRender();
 
+	UFUNCTION(BlueprintCallable, Category = "Name")
+		void PrintDebug(const FString& str);
+
 protected:
+	// Replicated Property: 서버에서 변경되면, 모든 클라이언트에 replicated 됨.
+	// 그 다음 모든 클라이언트에서 OnRep_Name() 함수 실행.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, ReplicatedUsing = OnRep_Name, Transient, Category = "Name")
 		FText Name;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Transient, Category = "Name")
-		FText SendingName;
+	// OnRep_Name() 함수에서 변경됨.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Name")
 		class UTextRenderComponent* NameTextRender;
 
-	UFUNCTION(BlueprintCallable, Category = "Name")
-		void PrintDebug(const FString& str);
 	/** inventory */
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
-		class UYJ_InventoryComponent* inventory;
+		class UYJ_InventoryComponent* Inventory;
 
 public:
 	/** widget manager - 캐릭터와 부딪히면 띄우는 UI 모음 */
@@ -106,20 +102,20 @@ public:
 	/** 플레이어 시간 */
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Time")
-		float time;
+		float Time;
 	
 	/** 퀴즈 */
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Quiz")
-		int32 quizScore;
+		int32 QuizScore;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Quiz")
-		bool isQuiz = false;
+		bool bIsQuiz = false;
 
 ///////////////////////// Interactive ////////////////////////////////////////
 protected :
-	class AOH_InteractiveBase* currentInteractive;
+	class AOH_InteractiveBase* CurrentInteractive;
 public:
-	FORCEINLINE class AOH_InteractiveBase* GetInteractive() {return currentInteractive; }
+	FORCEINLINE class AOH_InteractiveBase* GetInteractive() {return CurrentInteractive; }
 
 	void SetInteractiveInRange(class AOH_InteractiveBase* Interactive);
 	void ClearInteractiveInRange(class AOH_InteractiveBase* Interactive);
@@ -169,18 +165,18 @@ public:
 ///////////////////////////////////////////////////////////////////////
 // 옷 구매
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BoughtClothes")
-		TMap<FString, bool> BoughtClothes;
 	UFUNCTION(BlueprintCallable, Category = BoughtClothes)
 		bool GetBoughtClothes(FString key);
 	UFUNCTION(BlueprintCallable, Category = BoughtClothes)
 		void SetBoughtClothes(FString key, bool value);
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BoughtClothes")
+		TMap<FString, bool> BoughtClothes;
 
 	// 이전 맵 이름 저장
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PreLevelName")
-		FName preLevelName;
+		FName PreLevelName;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BoughtClothes")
-		TArray<FcloseBoughtMStruct> closetBoughts;
+		TArray<FcloseBoughtMStruct> ClosetBoughts;
 
 	/*
 		* Opens a file dialog for the specified data. Leave FileTypes empty to be able to select any files.

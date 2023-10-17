@@ -43,11 +43,6 @@ void AOH_InteractiveBase::BeginPlay()
 
 void AOH_InteractiveBase::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bfromSweep, const FHitResult& SweepResult)
 {
-	UE_LOG(LogTemp, Warning, TEXT("1111111111"));
-
-
-	
-
 	if(!bIsEnabled) return;
 
 	currentCharacter = Cast<AHelloFutureCharacter>(OtherActor);
@@ -72,9 +67,6 @@ void AOH_InteractiveBase::EndOverlap(UPrimitiveComponent* overlappedComp, AActor
 {
 	
 	//if(bIsEnabled) return;
-
-	UE_LOG(LogTemp, Warning, TEXT("222222"));
-
 	currentCharacter = Cast<AHelloFutureCharacter>(OtherActor);
 
 
@@ -111,6 +103,4 @@ void AOH_InteractiveBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	
 }
-

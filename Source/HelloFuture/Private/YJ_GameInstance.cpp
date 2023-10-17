@@ -29,7 +29,7 @@ UYJ_Item* UYJ_GameInstance::GetItemAsEnum(EItemEnum ItemEnum)
 
     // 아이템 배열에서 enum을 인덱스로 선택해서 가져오기
 	int32 ItemIdx = (int32)ItemEnum;
-	UYJ_Item* Item = GameInstance->allItems[ItemIdx];
+	UYJ_Item* Item = GameInstance->AllItems[ItemIdx];
 
     return Item;
 }

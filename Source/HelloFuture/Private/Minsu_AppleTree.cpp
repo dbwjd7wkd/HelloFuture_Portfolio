@@ -47,7 +47,7 @@ void AMinsu_AppleTree::SpawnFruit()
 	
 		if (world)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("SpawnActor"));
+			//UE_LOG(LogTemp, Warning, TEXT("SpawnActor"));
 			FActorSpawnParameters SpawnParams;
 			SpawnParams.Owner = this;
 			FRotator rotator;
