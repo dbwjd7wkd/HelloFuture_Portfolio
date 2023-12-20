@@ -11,8 +11,10 @@
 #include "Kismet/GameplayStatics.h" // save game 구조체 사용
 #include "HelloFutureCharacter.generated.h"
 
+DECLARE_DELEGATE(FPickUpItemDele)
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FSaveGameDelegate);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FLoadGameDelegate);
+
 
 UCLASS(config = Game)
 class AHelloFutureCharacter : public ACharacter, public IMinsu_Activate, public IMinsu_PlantSeed, public IMinsu_ShakeTree
@@ -26,6 +28,11 @@ public:
 	/** Replicated Property 등록 */
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	
+public:
+		FPickUpItemDele OnPickUpItemDelegate;
+
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	void PickUpItem();
 	/** save game */
 public:
 	UFUNCTION(BlueprintCallable, Category = "SaveGame")

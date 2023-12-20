@@ -180,6 +180,11 @@ void AHelloFutureCharacter::BeginPlay()
 	//name_TextRender->SetText(FText::FromString("Something"));
 }
 
+void AHelloFutureCharacter::PickUpItem()
+{
+	OnPickUpItemDelegate.ExecuteIfBound();
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // 정보 저장 및 가져오기
 void AHelloFutureCharacter::SaveGame()
@@ -574,8 +579,10 @@ void AHelloFutureCharacter::SetupPlayerInputComponent(class UInputComponent* Pla
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 
+
 	PlayerInputComponent->BindAxis("MoveForward", this, &AHelloFutureCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AHelloFutureCharacter::MoveRight);
+
 
 	// We have 2 versions of the rotation bindings to handle different kinds of devices differently
 	// "turn" handles devices that provide an absolute delta, such as a mouse.
@@ -592,12 +599,11 @@ void AHelloFutureCharacter::SetupPlayerInputComponent(class UInputComponent* Pla
 	// VR headset functionality
 	PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &AHelloFutureCharacter::OnResetVR);
 
+	// 아이템 줍기 델리게이트 바인딩 됨.
+	PlayerInputComponent->BindAction("PickUpItem", IE_Pressed, this, &AHelloFutureCharacter::PickUpItem);
+
 	////////////// 채팅 ////////////////
 	/*PlayerInputComponent->BindAction("Chatting", IE_Pressed, this, &AHelloFutureCharacter::Chatting);*/
-
-	// save game
-	PlayerInputComponent->BindAction("Save", IE_Pressed, this, &AHelloFutureCharacter::SaveGame);
-	PlayerInputComponent->BindAction("Load", IE_Pressed, this, &AHelloFutureCharacter::LoadGame);
 }
 
 void AHelloFutureCharacter::OnResetVR()
